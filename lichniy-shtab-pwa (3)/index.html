@@ -1,0 +1,2618 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#070B14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Личный штаб" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link id="pwaManifestLink" rel="manifest" href="" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <title>Личный штаб • LifeStats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            week1: '#EC4899',
+            week2: '#8B5CF6',
+            week3: '#38BDF8',
+            week4: '#F59E0B',
+            week5: '#14B8A6',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --bg-base: #070B14;
+      --bg-card: rgba(15, 23, 42, 0.88);
+      --bg-card-solid: #0F172A;
+      --bg-subcard: rgba(7, 11, 20, 0.78);
+      --bg-hover: rgba(30, 41, 59, 0.65);
+      --border-card: rgba(30, 41, 59, 0.9);
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --text-faint: #64748B;
+      --header-bg: rgba(7, 11, 20, 0.88);
+    }
+
+    html.light {
+      --bg-base: #F1F5F9;
+      --bg-card: rgba(255, 255, 255, 0.92);
+      --bg-card-solid: #FFFFFF;
+      --bg-subcard: rgba(241, 245, 249, 0.9);
+      --bg-hover: rgba(226, 232, 240, 0.75);
+      --border-card: rgba(203, 213, 225, 0.95);
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --text-faint: #64748B;
+      --header-bg: rgba(255, 255, 255, 0.9);
+    }
+
+    html {
+      overflow-x: clip;
+      max-width: 100%;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      overflow-x: clip;
+      max-width: 100%;
+      transition: color 0.2s ease, background-color 0.25s ease;
+    }
+
+    /* Слой пользовательского заднего фона */
+    #customBgLayer {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      transition: all 0.3s ease;
+    }
+
+    #customBgOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      transition: background-color 0.25s ease, backdrop-filter 0.25s ease;
+    }
+
+    .app-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .app-subcard {
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-card);
+    }
+
+    .app-header {
+      background-color: var(--header-bg);
+      border-bottom: 1px solid var(--border-card);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .app-input {
+      background-color: var(--bg-subcard);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      font-size: 16px;
+    }
+
+    @media (min-width: 640px) {
+      .app-input {
+        font-size: 0.75rem;
+      }
+      .app-input-sm {
+        font-size: 0.875rem;
+      }
+    }
+
+    .app-input:focus {
+      border-color: #14B8A6;
+      outline: none;
+    }
+
+    .text-main { color: var(--text-main); }
+    .text-muted { color: var(--text-muted); }
+    .text-faint { color: var(--text-faint); }
+    .sticky-col { background-color: var(--bg-card-solid); }
+
+    /* Горизонтальная прокрутка со скрытым скроллбаром для мобильных полос */
+    .scroll-strip {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .scroll-strip::-webkit-scrollbar {
+      display: none;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.4); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.65); }
+
+    .habit-box {
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease;
+    }
+    .habit-box:active { transform: scale(0.84); }
+
+    .fade-in { animation: fadeIn 0.22s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-teal-500/30">
+
+  <!-- Фоновые слои -->
+  <div id="customBgLayer"></div>
+  <div id="customBgOverlay"></div>
+
+  <!-- Toast уведомление -->
+  <div id="toast" role="status" aria-live="polite" class="fixed bottom-4 left-3 right-3 sm:left-auto sm:right-5 sm:bottom-5 z-50 hidden items-center justify-center sm:justify-start gap-2.5 app-card border-teal-500/50 text-main px-4 py-3 rounded-xl shadow-2xl text-sm font-medium">
+    <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse shrink-0"></span>
+    <span id="toastText" class="truncate">Сохранено</span>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ЛИЧНЫЙ КАБИНЕТ / ПРОФИЛИ ==================== -->
+  <div id="profileModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onclick="handleBackdropClick(event, 'profileModal')">
+    <div class="app-card rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base sm:text-lg font-bold text-main flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-400"></span>
+          Личный кабинет • Аккаунты
+        </h3>
+        <button onclick="closeModal('profileModal')" aria-label="Закрыть окно" class="text-muted hover:text-main min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl cursor-pointer">✕</button>
+      </div>
+      <p class="text-xs text-muted mb-4">
+        У каждого пользователя свой изолированный кабинет: привычки, финансы, расписание пар, задачи и фон сохраняются отдельно для каждого профиля.
+      </p>
+
+      <!-- Карточка редактирования текущего профиля -->
+      <div class="app-subcard rounded-xl p-3.5 mb-4">
+        <div class="text-[11px] font-bold uppercase tracking-wider text-teal-400 mb-2">Текущий профиль</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input id="editCurrentName" type="text" placeholder="Имя" class="app-input rounded-xl px-3 py-2.5 font-semibold" />
+          <input id="editCurrentRole" type="text" placeholder="Группа / Должность" class="app-input rounded-xl px-3 py-2.5" />
+          <button onclick="saveCurrentProfileMeta()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-xl px-3 py-2.5 text-xs transition cursor-pointer min-h-[40px]">
+            Сохранить данные
+          </button>
+        </div>
+      </div>
+
+      <!-- Список профилей -->
+      <div id="profileList" class="space-y-2 max-h-48 overflow-y-auto mb-4 pr-1"></div>
+
+      <!-- Создание нового профиля -->
+      <div class="border-t border-slate-700/40 pt-4">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-muted mb-2">Добавить нового пользователя</label>
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+          <input id="newProfileName" type="text" placeholder="Имя (напр. Закир)" class="sm:col-span-5 app-input rounded-xl px-3 py-2.5" />
+          <input id="newProfileRole" type="text" placeholder="Роль / Группа" class="sm:col-span-4 app-input rounded-xl px-3 py-2.5" />
+          <button onclick="createProfile()" class="sm:col-span-3 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold px-3 py-2.5 rounded-xl text-xs transition cursor-pointer min-h-[40px]">
+            + Создать
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: НАСТРОЙКА ЗАДНЕГО ФОНА ==================== -->
+  <div id="bgModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onclick="handleBackdropClick(event, 'bgModal')">
+    <div class="app-card rounded-t-3xl sm:rounded-2xl w-full max-w-lg p-5 sm:p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base sm:text-lg font-bold text-main">🎨 Настройка заднего фона</h3>
+        <button onclick="closeModal('bgModal')" aria-label="Закрыть окно" class="text-muted hover:text-main min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl cursor-pointer">✕</button>
+      </div>
+      <p class="text-xs text-muted mb-4">Выберите готовый градиент, любой сплошной цвет, ссылку на картинку или загрузите своё фото с устройства.</p>
+
+      <!-- Готовые пресеты -->
+      <div class="mb-4">
+        <div class="text-xs font-semibold text-muted mb-2">Готовые стили</div>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <button onclick="applyBgPreset('default')" class="h-12 rounded-xl border border-slate-600 bg-[#070B14] text-[10px] text-white font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition">Стандарт</button>
+          <button onclick="applyBgPreset('aurora')" class="h-12 rounded-xl border border-slate-600 text-[10px] text-white font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition" style="background: radial-gradient(circle at 20% 20%, #0f766e, #090d16 65%, #3b0764);">Аврора</button>
+          <button onclick="applyBgPreset('sunset')" class="h-12 rounded-xl border border-slate-600 text-[10px] text-white font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition" style="background: linear-gradient(135deg, #1e1b4b 0%, #701a75 50%, #9a3412 100%);">Закат</button>
+          <button onclick="applyBgPreset('ocean')" class="h-12 rounded-xl border border-slate-600 text-[10px] text-white font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition" style="background: linear-gradient(135deg, #020617 0%, #0c4a6e 55%, #115e59 100%);">Океан</button>
+          <button onclick="applyBgPreset('royal')" class="h-12 rounded-xl border border-slate-600 text-[10px] text-white font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition" style="background: linear-gradient(135deg, #09090b 0%, #312e81 60%, #4c1d95 100%);">Индиго</button>
+          <button onclick="applyBgPreset('lightClean')" class="h-12 rounded-xl border border-slate-400 text-[10px] text-slate-900 font-semibold flex items-end p-1.5 cursor-pointer hover:scale-105 transition" style="background: linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 50%, #fae8ff 100%);">Светлый</button>
+        </div>
+      </div>
+
+      <!-- Свой сплошной цвет -->
+      <div class="app-subcard rounded-xl p-3.5 mb-3 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <div class="text-xs font-semibold text-main">Свой цвет фона</div>
+          <div class="text-[11px] text-muted">Любой оттенок палитры</div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <input id="bgColorPicker" type="color" value="#070B14" aria-label="Выбор цвета фона" class="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-0" />
+          <button onclick="applyCustomColor()" class="px-3.5 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs cursor-pointer min-h-[40px]">Применить</button>
+        </div>
+      </div>
+
+      <!-- Своё изображение (Файл или URL) -->
+      <div class="app-subcard rounded-xl p-3.5 mb-4 space-y-3">
+        <div class="text-xs font-semibold text-main">Своё изображение на фон</div>
+        <div class="flex gap-2">
+          <input id="bgImageUrlInput" type="url" placeholder="Вставьте ссылку на картинку (https://...)" class="flex-1 min-w-0 app-input rounded-xl px-3 py-2.5" />
+          <button onclick="applyBgImageUrl()" class="px-4 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs cursor-pointer min-h-[40px]">OK</button>
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          <label class="flex-1 text-center py-2.5 px-3 rounded-xl border border-dashed border-teal-500/50 text-teal-400 hover:bg-teal-500/10 text-xs font-semibold cursor-pointer transition min-h-[40px] flex items-center justify-center">
+            📁 Загрузить фото с устройства
+            <input type="file" accept="image/*" onchange="handleBgFileUpload(event)" class="hidden" />
+          </label>
+          <button onclick="applyBgPreset('default')" class="py-2.5 px-3.5 rounded-xl border border-slate-600/50 text-muted hover:text-main text-xs cursor-pointer min-h-[40px]">Сбросить</button>
+        </div>
+      </div>
+
+      <!-- Ползунок затемнения -->
+      <div class="app-subcard rounded-xl p-3.5 space-y-2">
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold text-main">Затемнение подложки (для читаемости)</span>
+          <span id="bgDimLabel" class="font-bold text-teal-400">45%</span>
+        </div>
+        <input id="bgDimSlider" type="range" min="0" max="85" value="45" aria-label="Затемнение подложки" oninput="updateBgDim(this.value)" class="w-full accent-teal-400 cursor-pointer h-6" />
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ / РЕДАКТИРОВАНИЕ ПРИВЫЧКИ ==================== -->
+  <div id="habitModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onclick="handleBackdropClick(event, 'habitModal')">
+    <div class="app-card rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="habitModalTitle" class="text-base sm:text-lg font-bold text-main">Новая привычка</h3>
+        <button onclick="closeModal('habitModal')" aria-label="Закрыть окно" class="text-muted hover:text-main min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl cursor-pointer">✕</button>
+      </div>
+      <form onsubmit="saveHabitFromModal(event)" class="space-y-4">
+        <input type="hidden" id="editHabitIdInput" />
+        <div class="grid grid-cols-4 gap-3">
+          <div>
+            <label class="block text-xs text-muted mb-1">Иконка</label>
+            <input id="quickHabitEmoji" type="text" value="⚡" maxlength="2" class="w-full text-center app-input app-input-sm rounded-xl px-2 py-2.5 text-lg" />
+          </div>
+          <div class="col-span-3">
+            <label class="block text-xs text-muted mb-1">Название привычки</label>
+            <input id="quickHabitName" type="text" required placeholder="Например: Учить английский 20 мин" class="w-full app-input app-input-sm rounded-xl px-3.5 py-2.5" />
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-muted mb-1">Цель на месяц (дней)</label>
+          <input id="quickHabitGoal" type="number" min="1" max="31" value="31" class="w-full app-input app-input-sm rounded-xl px-3.5 py-2.5" />
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('habitModal')" class="px-4 py-2.5 rounded-xl border border-slate-600/50 text-muted text-xs sm:text-sm font-semibold cursor-pointer min-h-[40px]">Отмена</button>
+          <button type="submit" id="habitModalSubmitBtn" class="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs sm:text-sm cursor-pointer min-h-[40px]">Добавить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ / ДОБАВЛЕНИЕ ПАРЫ (УРОКА) ==================== -->
+  <div id="lessonModal" class="fixed inset-0 z-50 hidden items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm p-0 sm:p-4" onclick="handleBackdropClick(event, 'lessonModal')">
+    <div class="app-card rounded-t-3xl sm:rounded-2xl w-full max-w-md p-5 sm:p-6 shadow-2xl fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
+        <h3 id="lessonModalTitle" class="text-base sm:text-lg font-bold text-main">Редактировать пару</h3>
+        <button onclick="closeModal('lessonModal')" aria-label="Закрыть окно" class="text-muted hover:text-main min-w-[40px] min-h-[40px] flex items-center justify-center rounded-xl cursor-pointer">✕</button>
+      </div>
+      <form onsubmit="saveLessonForm(event)" class="space-y-3.5">
+        <input type="hidden" id="lessonDayInput" />
+        <input type="hidden" id="lessonIdInput" />
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-muted mb-1">Начало пары</label>
+            <input id="lessonStartInput" type="time" required value="08:00" class="w-full app-input app-input-sm rounded-xl px-3 py-2.5 font-semibold" />
+          </div>
+          <div>
+            <label class="block text-xs text-muted mb-1">Конец пары</label>
+            <input id="lessonEndInput" type="time" required value="09:20" class="w-full app-input app-input-sm rounded-xl px-3 py-2.5 font-semibold" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-muted mb-1">Название предмета / пары</label>
+          <input id="lessonSubjectInput" type="text" required placeholder="Например: Высшая математика" class="w-full app-input app-input-sm rounded-xl px-3.5 py-2.5" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-muted mb-1">Тип занятия</label>
+            <select id="lessonTypeInput" class="w-full app-input rounded-xl px-3 py-2.5 font-semibold">
+              <option value="Лекция">📘 Лекция</option>
+              <option value="Практика">🛠️ Практика</option>
+              <option value="Лабораторная">🧪 Лабораторная</option>
+              <option value="Семинар">💬 Семинар</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-muted mb-1">Аудитория / Кабинет</label>
+            <input id="lessonRoomInput" type="text" placeholder="Ауд. 304 / Онлайн" class="w-full app-input rounded-xl px-3 py-2.5" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs text-muted mb-1">Преподаватель / Заметка</label>
+          <input id="lessonTeacherInput" type="text" placeholder="Иванов И.И." class="w-full app-input rounded-xl px-3.5 py-2.5" />
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeModal('lessonModal')" class="px-4 py-2.5 rounded-xl border border-slate-600/50 text-muted text-xs font-semibold cursor-pointer min-h-[40px]">Отмена</button>
+          <button type="submit" class="px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs cursor-pointer min-h-[40px]">Сохранить пару</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 1. ВЕРХНЯЯ ШАПКА (HEADER) ==================== -->
+  <header class="sticky top-0 z-30 app-header">
+    <div class="max-w-[1640px] mx-auto px-3 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-2 sm:gap-2.5">
+      
+      <!-- Бренд -->
+      <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-400 via-sky-500 to-purple-600 p-[1.5px] shadow-lg shrink-0">
+          <div class="w-full h-full bg-[#0F172A] rounded-[10px] flex items-center justify-center font-extrabold text-teal-400 text-xs">
+            ЛШ
+          </div>
+        </div>
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm sm:text-base font-extrabold tracking-tight text-main truncate">Личный штаб</h1>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-400 border border-teal-500/30 shrink-0">LifeStats</span>
+          </div>
+          <p class="text-[10px] text-muted hidden md:block">Привычки • Финансы • Расписание • Задачи</p>
+        </div>
+      </div>
+
+      <!-- Главная навигация по 5 разделам -->
+      <nav aria-label="Основные разделы" class="scroll-strip flex items-center app-subcard p-1 rounded-xl overflow-x-auto max-w-full order-3 lg:order-2 w-full lg:w-auto justify-start sm:justify-center gap-1">
+        <button onclick="switchTab('habits')" id="tab-habits" class="tab-btn min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap bg-teal-500 text-slate-950">
+          📊 Привычки
+        </button>
+        <button onclick="switchTab('finance')" id="tab-finance" class="tab-btn min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap text-muted hover:text-main">
+          💰 Финансы
+        </button>
+        <button onclick="switchTab('schedule')" id="tab-schedule" class="tab-btn min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap text-muted hover:text-main">
+          🎓 Расписание пар
+        </button>
+        <button onclick="switchTab('tasks')" id="tab-tasks" class="tab-btn min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap text-muted hover:text-main">
+          ✅ Задачи
+        </button>
+        <button onclick="switchTab('settings')" id="tab-settings" class="tab-btn min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer whitespace-nowrap text-muted hover:text-main">
+          ⚙️ Настройки
+        </button>
+      </nav>
+
+      <!-- Правая панель: Тема + Фон + Личный кабинет -->
+      <div class="flex items-center gap-1.5 sm:gap-2 order-2 lg:order-3 shrink-0">
+        <!-- Кнопка установки приложения (PWA) -->
+        <button onclick="handleInstallClick()" id="installAppBtn" aria-label="Установить приложение" title="Установить приложение на устройство" class="bg-teal-500 hover:bg-teal-400 text-slate-950 min-h-[40px] px-2.5 sm:px-3 py-2 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-teal-500/20">
+          <span>📲</span>
+          <span class="hidden sm:inline">Установить</span>
+        </button>
+
+        <!-- Кнопка переключения темы -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" aria-label="Переключить тёмную или светлую тему" title="Переключить тёмную / светлую тему" class="app-subcard hover:border-teal-500/40 min-w-[40px] min-h-[40px] px-2.5 py-2 rounded-xl text-xs font-semibold text-main transition cursor-pointer flex items-center justify-center gap-1.5">
+          <span id="themeIcon">🌙</span>
+          <span id="themeLabel" class="hidden xl:inline">Тёмная</span>
+        </button>
+
+        <!-- Кнопка смены заднего фона -->
+        <button onclick="openBgModal()" aria-label="Изменить задний фон" title="Изменить задний фон" class="app-subcard hover:border-teal-500/40 min-w-[40px] min-h-[40px] px-2.5 py-2 rounded-xl text-xs font-semibold text-main transition cursor-pointer flex items-center justify-center gap-1.5">
+          <span>🎨</span>
+          <span class="hidden xl:inline">Фон</span>
+        </button>
+
+        <!-- Кнопка личного кабинета -->
+        <button onclick="openProfileModal()" title="Открыть личный кабинет и сменить профиль" class="flex items-center gap-2 app-subcard hover:border-teal-500/50 min-h-[40px] px-2.5 py-1.5 rounded-xl transition cursor-pointer group">
+          <div id="headerAvatar" class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 shrink-0" style="background-color: #14B8A6;">
+            А
+          </div>
+          <div class="text-left max-w-[90px] sm:max-w-[140px]">
+            <div id="headerUserName" class="text-xs font-bold text-main leading-tight group-hover:text-teal-400 transition truncate">Александр</div>
+            <div id="headerUserRole" class="text-[10px] text-muted leading-tight truncate">Кабинет ▾</div>
+          </div>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== ОСНОВНОЙ КОНТЕЙНЕР ==================== -->
+  <main class="flex-1 max-w-[1640px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-5 min-w-0">
+
+    <!-- ===================================================================== -->
+    <!-- РАЗДЕЛ 1: ДАШБОРД ПРИВЫЧЕК                                            -->
+    <!-- ===================================================================== -->
+    <div id="view-habits" class="space-y-4 sm:space-y-5 fade-in min-w-0">
+      
+      <!-- Полоса выбора месяца -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 app-card rounded-xl px-3.5 sm:px-4 py-2.5 min-w-0">
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="text-xs font-extrabold uppercase tracking-wider text-teal-400">Период:</span>
+          <span id="activeMonthTitle" class="text-xs sm:text-sm font-extrabold text-main uppercase">• ИЮЛЬ 2026 •</span>
+        </div>
+        <div id="monthTabs" class="scroll-strip flex items-center gap-1 overflow-x-auto max-w-full py-0.5"></div>
+      </div>
+
+      <!-- Верхний ряд: Линейный график + Кольцевой прогресс -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
+        <div class="lg:col-span-9 app-card rounded-xl p-4 sm:p-5 flex flex-col justify-between min-w-0">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="min-w-0">
+              <h2 class="text-sm sm:text-base font-extrabold text-main">Динамика выполнения привычек по дням</h2>
+              <p class="text-xs text-muted">Процент выполненных дисциплинарных привычек за каждый день месяца</p>
+            </div>
+            <div id="chartHoverInfo" class="text-xs font-semibold text-teal-400 bg-teal-500/10 border border-teal-500/25 px-3 py-1.5 rounded-lg">
+              Нажмите или наведите на день графика
+            </div>
+          </div>
+          <div class="w-full h-44 sm:h-48 relative select-none min-w-0">
+            <svg id="areaChartSvg" class="w-full h-full overflow-visible" viewBox="0 0 900 180" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <div class="lg:col-span-3 app-card rounded-xl p-4 sm:p-5 flex flex-col items-center justify-between min-w-0">
+          <div class="w-full flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-muted">Общий прогресс</span>
+            <span id="monthDaysBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded app-subcard text-main">31 дн.</span>
+          </div>
+          <div class="relative w-36 h-36 my-2 flex items-center justify-center">
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(148,163,184,0.2)" stroke-width="11" />
+              <circle id="donutProgressCircle" cx="60" cy="60" r="48" fill="none" stroke="#14B8A6" stroke-width="11"
+                stroke-linecap="round" stroke-dasharray="301.59" stroke-dashoffset="150"
+                class="transition-all duration-500 ease-out" />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+              <span id="donutPercentText" class="text-2xl font-extrabold text-main">0%</span>
+              <span class="text-[10px] uppercase tracking-wider text-muted">выполнено</span>
+            </div>
+          </div>
+          <div class="w-full grid grid-cols-2 gap-2 pt-2 border-t border-slate-700/30">
+            <div class="app-subcard rounded-lg p-2 text-center">
+              <div class="text-[10px] uppercase text-muted">Завершено</div>
+              <div id="ringCompletedCount" class="text-sm font-bold text-teal-400 mt-0.5">0</div>
+            </div>
+            <div class="app-subcard rounded-lg p-2 text-center">
+              <div class="text-[10px] uppercase text-muted">Осталось</div>
+              <div id="ringRemainingCount" class="text-sm font-bold text-main mt-0.5">0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Средний ряд: Еженедельная статистика -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
+        <div class="lg:col-span-3 app-card rounded-xl p-4 flex flex-col justify-between gap-3 min-w-0">
+          <div class="text-xs font-bold uppercase tracking-wider text-muted border-b border-slate-700/30 pb-2">
+            Еженедельная статистика
+          </div>
+          <div class="app-subcard rounded-xl p-3">
+            <div class="flex justify-between items-center mb-1.5">
+              <span class="text-[11px] font-semibold uppercase text-muted">Глобальный прогресс</span>
+              <span id="metricGlobalRatio" class="text-xs font-bold text-main">0 / 0</span>
+            </div>
+            <div class="w-full h-2 bg-slate-700/40 rounded-full overflow-hidden">
+              <div id="metricGlobalBar" class="h-full bg-gradient-to-r from-pink-500 via-purple-500 to-teal-400 transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div class="app-subcard rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">Завершено</div>
+              <div id="metricDoneTotal" class="text-lg font-extrabold text-emerald-400 mt-0.5">0</div>
+              <div class="text-[10px] text-faint">отметок</div>
+            </div>
+            <div class="app-subcard rounded-xl p-3">
+              <div class="text-[10px] uppercase text-muted">В среднем</div>
+              <div id="metricDailyAvg" class="text-lg font-extrabold text-sky-400 mt-0.5">0%</div>
+              <div class="text-[10px] text-faint">за день</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-9 app-card rounded-xl p-4 flex flex-col justify-between overflow-x-auto scroll-strip min-w-0">
+          <div class="min-w-[680px] sm:min-w-[760px]">
+            <div id="weeklyHeadersRow" class="grid gap-1 mb-2 text-center"></div>
+            <div id="weeklyBarsContainer" class="h-28 flex items-end gap-1 pt-4 pb-1 border-b border-slate-700/30"></div>
+            <div id="weeklyFooterStats" class="mt-2.5 grid gap-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Нижний ряд: Таблица привычек + ТОП -->
+      <section class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start min-w-0">
+        <div class="xl:col-span-9 app-card rounded-xl overflow-hidden min-w-0">
+          <div class="p-3.5 sm:p-4 border-b border-slate-700/30 flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2.5">
+              <h2 class="text-xs sm:text-sm font-extrabold uppercase tracking-wider text-main">Ежедневные привычки</h2>
+              <span id="habitsCountBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full app-subcard text-muted">0 привычек</span>
+            </div>
+            <button onclick="openAddHabitModal()" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs px-3.5 py-2 rounded-xl transition cursor-pointer min-h-[40px]">
+              + Добавить привычку
+            </button>
+          </div>
+
+          <!-- Быстрая строка добавления привычки прямо в разделе привычек -->
+          <form onsubmit="addHabitInline(event)" class="px-3.5 sm:px-4 py-2.5 border-b border-slate-700/30 bg-slate-900/20 grid grid-cols-12 gap-2 items-center">
+            <input id="inlineHabitEmoji" type="text" value="🔥" maxlength="2" aria-label="Иконка новой привычки" class="col-span-2 sm:col-span-1 text-center app-input rounded-xl px-2 py-2 text-sm" title="Иконка" />
+            <input id="inlineHabitName" type="text" required placeholder="Быстро добавить привычку... (напр. Пить 2 л воды)" class="col-span-10 sm:col-span-7 app-input rounded-xl px-3 py-2" />
+            <input id="inlineHabitGoal" type="number" min="1" max="31" value="31" aria-label="Цель дней в месяце" title="Цель дней в месяце" class="col-span-5 sm:col-span-2 text-center app-input rounded-xl px-2 py-2 font-semibold" />
+            <button type="submit" class="col-span-7 sm:col-span-2 bg-teal-500/15 hover:bg-teal-500 text-teal-400 hover:text-slate-950 border border-teal-500/40 font-bold py-2 px-3 rounded-xl text-xs transition cursor-pointer min-h-[38px]">
+              + В список
+            </button>
+          </form>
+
+          <div class="overflow-x-auto scroll-strip">
+            <table class="w-full border-collapse text-left min-w-[1120px] sm:min-w-[1200px]">
+              <thead id="habitTableHead" class="app-subcard text-[10px] uppercase tracking-wider text-muted border-b border-slate-700/30"></thead>
+              <tbody id="habitTableBody" class="divide-y divide-slate-700/30 text-xs"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="xl:col-span-3 app-card rounded-xl p-4 min-w-0">
+          <div class="flex items-center justify-between border-b border-slate-700/30 pb-3 mb-3">
+            <h2 class="text-xs font-extrabold uppercase tracking-wider text-main">Главные привычки месяца</h2>
+            <span class="text-[11px] text-teal-400 font-bold">ТОП</span>
+          </div>
+          <div id="topHabitsList" class="space-y-2.5"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- РАЗДЕЛ 2: ФИНАНСЫ (ДОХОДЫ, РАСХОДЫ, ПЛАН/ФАКТ, КАТЕГОРИИ)             -->
+    <!-- ===================================================================== -->
+    <div id="view-finance" class="hidden space-y-4 sm:space-y-5 fade-in min-w-0">
+      
+      <!-- 1. Верхние KPI карточки баланса -->
+      <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 min-w-0">
+        <div class="app-card rounded-xl p-4 border-l-4 border-l-teal-400 min-w-0">
+          <div class="flex items-center justify-between text-xs text-muted mb-1">
+            <span class="font-semibold uppercase">💰 Баланс средств</span>
+            <span class="text-teal-400 font-bold">Факт</span>
+          </div>
+          <div id="finBalanceVal" class="text-xl sm:text-2xl font-extrabold text-main">0 сом</div>
+          <div id="finSavingsRate" class="text-[11px] text-teal-400 mt-1">Норма сбережений: 0%</div>
+        </div>
+
+        <div class="app-card rounded-xl p-4 border-l-4 border-l-emerald-400 min-w-0">
+          <div class="flex items-center justify-between text-xs text-muted mb-1">
+            <span class="font-semibold uppercase">📈 Доходы (Факт / План)</span>
+            <span id="finIncomePctBadge" class="text-emerald-400 font-bold">0%</span>
+          </div>
+          <div id="finIncomeVal" class="text-xl sm:text-2xl font-extrabold text-emerald-400">0 сом</div>
+          <div id="finIncomePlanSub" class="text-[11px] text-muted mt-1">План: 0 сом</div>
+        </div>
+
+        <div class="app-card rounded-xl p-4 border-l-4 border-l-rose-500 min-w-0">
+          <div class="flex items-center justify-between text-xs text-muted mb-1">
+            <span class="font-semibold uppercase">📉 Расходы (Факт / План)</span>
+            <span id="finExpensePctBadge" class="text-rose-400 font-bold">0%</span>
+          </div>
+          <div id="finExpenseVal" class="text-xl sm:text-2xl font-extrabold text-rose-400">0 сом</div>
+          <div id="finExpensePlanSub" class="text-[11px] text-muted mt-1">План: 0 сом</div>
+        </div>
+
+        <div class="app-card rounded-xl p-4 border-l-4 border-l-amber-400 min-w-0">
+          <div class="flex items-center justify-between gap-2 text-xs text-muted mb-1">
+            <span class="font-semibold uppercase">🎯 Остаток лимита расходов</span>
+            <div class="flex items-center gap-1.5">
+              <span class="text-amber-400 font-bold">Бюджет</span>
+              <button onclick="openBudgetLimitEditor()" title="Изменить лимит или остаток бюджета" class="px-2 py-0.5 rounded-md bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 font-bold text-[10px] cursor-pointer transition">
+                ✏️ Изменить
+              </button>
+            </div>
+          </div>
+          <div id="finBudgetLeftVal" class="text-xl sm:text-2xl font-extrabold text-main">0 сом</div>
+          <div id="finBudgetStatus" class="text-[11px] text-muted mt-1">В рамках плана</div>
+          <div id="finBudgetLimitEditor" class="hidden mt-3 pt-2.5 border-t border-slate-700/40 space-y-2">
+            <div class="text-[11px] text-muted">Задайте желаемый <strong class="text-main">остаток лимита</strong> или <strong class="text-main">общий лимит расходов</strong>:</div>
+            <div class="grid grid-cols-1 gap-1.5">
+              <label class="text-[10px] text-muted flex flex-col gap-1">
+                <span>Желаемый остаток сейчас (сом)</span>
+                <input id="finDesiredLeftInput" type="number" step="100" class="app-input rounded-lg px-2.5 py-1.5 font-bold" />
+              </label>
+              <label class="text-[10px] text-muted flex flex-col gap-1">
+                <span>Либо общий лимит расходов на месяц (сом)</span>
+                <input id="finCustomTotalLimitInput" type="number" min="0" step="100" class="app-input rounded-lg px-2.5 py-1.5 font-bold" />
+              </label>
+            </div>
+            <div class="flex items-center gap-1.5 pt-1">
+              <button onclick="applyDesiredBudgetLeft()" class="flex-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-1.5 px-2 rounded-lg text-[11px] cursor-pointer">
+                Сохранить остаток
+              </button>
+              <button onclick="applyCustomTotalBudgetLimit()" class="flex-1 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-1.5 px-2 rounded-lg text-[11px] cursor-pointer">
+                Задать лимит
+              </button>
+              <button onclick="resetBudgetLimitOverride()" title="Сбросить к сумме планов категорий" class="px-2 py-1.5 rounded-lg border border-slate-600/50 text-muted hover:text-main text-[11px] cursor-pointer">
+                ↺
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. График доходов и расходов (дни / недели) + Круговая диаграмма расходов -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 min-w-0">
+        
+        <!-- График доходов и расходов по дням и неделям -->
+        <div class="lg:col-span-8 app-card rounded-xl p-4 sm:p-5 flex flex-col justify-between min-w-0">
+          <div class="flex flex-wrap items-center justify-between gap-2.5 mb-4">
+            <div class="min-w-0">
+              <h2 class="text-sm sm:text-base font-extrabold text-main">📈 График доходов и расходов</h2>
+              <p class="text-xs text-muted">Сравнение денежных потоков по периодам</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center gap-3 text-xs mr-1">
+                <span class="flex items-center gap-1.5 text-emerald-400 font-semibold"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-400"></span>Доходы</span>
+                <span class="flex items-center gap-1.5 text-rose-400 font-semibold"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span>Расходы</span>
+              </div>
+              <div class="app-subcard p-1 rounded-xl flex text-xs font-bold">
+                <button onclick="setFinanceChartMode('weekly')" id="finModeWeekly" class="min-h-[36px] px-3 py-1 rounded-lg bg-teal-500 text-slate-950 cursor-pointer whitespace-nowrap">По неделям</button>
+                <button onclick="setFinanceChartMode('daily')" id="finModeDaily" class="min-h-[36px] px-3 py-1 rounded-lg text-muted hover:text-main cursor-pointer whitespace-nowrap">По дням</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full h-52 sm:h-56 relative min-w-0">
+            <svg id="financeFlowSvg" class="w-full h-full overflow-visible" viewBox="0 0 800 220" preserveAspectRatio="none"></svg>
+          </div>
+        </div>
+
+        <!-- Круговая диаграмма распределения расходов по категориям -->
+        <div class="lg:col-span-4 app-card rounded-xl p-4 sm:p-5 flex flex-col justify-between min-w-0">
+          <div>
+            <h2 class="text-sm sm:text-base font-extrabold text-main">🥧 Расходы по категориям</h2>
+            <p class="text-xs text-muted">Доля каждой категории в общих тратах</p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row lg:flex-col items-center gap-4 my-2">
+            <div class="relative w-36 h-36 sm:w-40 sm:h-40 shrink-0">
+              <svg id="expensePieSvg" class="w-full h-full -rotate-90" viewBox="0 0 120 120"></svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                <span class="text-[10px] uppercase text-muted">Всего трат</span>
+                <span id="pieTotalExpenseText" class="text-xs font-extrabold text-main px-1">0</span>
+              </div>
+            </div>
+            <div id="expensePieLegend" class="w-full space-y-1.5 max-h-40 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. План и Факт + Управление категориями (добавлять, менять, удалять) -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start min-w-0">
+        
+        <!-- Таблица категорий с План / Факт и редактированием -->
+        <div class="lg:col-span-7 app-card rounded-xl p-4 sm:p-5 min-w-0">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-sm sm:text-base font-extrabold text-main">📊 План и факт • Категории</h2>
+              <p class="text-xs text-muted">Добавляйте категории, меняйте плановый бюджет или удаляйте ненужные</p>
+            </div>
+          </div>
+
+          <!-- Форма добавления / редактирования категории -->
+          <form onsubmit="saveFinanceCategory(event)" class="app-subcard rounded-xl p-3 mb-4 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+            <input type="hidden" id="finCatEditId" />
+            <input id="finCatEmoji" type="text" value="🍔" maxlength="2" aria-label="Иконка категории" class="sm:col-span-1 text-center app-input rounded-xl px-2 py-2.5 text-sm" title="Иконка" />
+            <input id="finCatName" type="text" required placeholder="Название категории (напр. Продукты)" class="sm:col-span-4 app-input rounded-xl px-3 py-2.5" />
+            <select id="finCatType" aria-label="Тип категории" class="sm:col-span-3 app-input rounded-xl px-2.5 py-2.5 font-semibold">
+              <option value="expense">📉 Расход</option>
+              <option value="income">📈 Доход</option>
+            </select>
+            <input id="finCatPlan" type="number" min="0" step="100" required placeholder="План (сумма)" class="sm:col-span-2 app-input rounded-xl px-2.5 py-2.5" />
+            <button type="submit" id="finCatSubmitBtn" class="sm:col-span-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold py-2.5 px-3 rounded-xl text-xs cursor-pointer min-h-[40px]">
+              + Добавить
+            </button>
+          </form>
+
+          <div class="overflow-x-auto scroll-strip">
+            <table class="w-full text-left border-collapse text-xs min-w-[540px]">
+              <thead class="app-subcard text-[10px] uppercase text-muted border-b border-slate-700/30">
+                <tr>
+                  <th class="py-2 px-3">Категория</th>
+                  <th class="py-2 px-2">Тип</th>
+                  <th class="py-2 px-2 text-right">План</th>
+                  <th class="py-2 px-2 text-right">Факт</th>
+                  <th class="py-2 px-3 w-32">Выполнение</th>
+                  <th class="py-2 px-2 text-center">Действия</th>
+                </tr>
+              </thead>
+              <tbody id="financeCategoriesTableBody" class="divide-y divide-slate-700/30"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Журнал операций (Транзакции: добавление, редактирование, удаление) -->
+        <div class="lg:col-span-5 app-card rounded-xl p-4 sm:p-5 min-w-0">
+          <div class="mb-3">
+            <h2 class="text-sm sm:text-base font-extrabold text-main">📋 Операции (Доходы и расходы)</h2>
+            <p class="text-xs text-muted">Записывайте фактические траты и поступления</p>
+          </div>
+
+          <!-- Форма добавления операции -->
+          <form onsubmit="addFinanceTransaction(event)" class="app-subcard rounded-xl p-3 mb-4 space-y-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input id="finTxDate" type="date" required aria-label="Дата операции" class="app-input rounded-xl px-3 py-2.5" />
+              <select id="finTxCategory" required aria-label="Категория операции" class="app-input rounded-xl px-3 py-2.5 font-semibold"></select>
+            </div>
+            <div class="grid grid-cols-12 gap-2">
+              <input id="finTxNote" type="text" placeholder="Комментарий (напр. Обед, Зарплата)" class="col-span-6 app-input rounded-xl px-3 py-2.5" />
+              <input id="finTxAmount" type="number" min="1" step="any" required placeholder="Сумма" class="col-span-4 app-input rounded-xl px-2.5 py-2.5 font-bold" />
+              <button type="submit" aria-label="Добавить операцию" class="col-span-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold rounded-xl text-base cursor-pointer min-h-[40px]" title="Добавить операцию">+</button>
+            </div>
+          </form>
+
+          <div id="financeTransactionsList" class="space-y-2 max-h-[380px] overflow-y-auto pr-1"></div>
+        </div>
+
+      </section>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- РАЗДЕЛ 3: РАСПИСАНИЕ УРОКОВ / ПАР                                     -->
+    <!-- ===================================================================== -->
+    <div id="view-schedule" class="hidden space-y-4 sm:space-y-5 fade-in min-w-0">
+      <div class="app-card rounded-xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h2 class="text-base sm:text-lg font-extrabold text-main">🎓 Расписание пар и занятий</h2>
+          <p class="text-xs text-muted">Нажимайте на любую пару, чтобы изменить время начала и конца, предмет, аудиторию или добавить новую пару.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openAddLessonModal(0)" class="bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition cursor-pointer min-h-[40px]">
+            + Добавить пару
+          </button>
+        </div>
+      </div>
+
+      <!-- Сетка дней недели (Понедельник – Суббота) -->
+      <div id="scheduleGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 min-w-0"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- РАЗДЕЛ 4: ЛИЧНЫЙ ТРЕКЕР ЗАДАЧ                                         -->
+    <!-- ===================================================================== -->
+    <div id="view-tasks" class="hidden space-y-4 sm:space-y-5 fade-in max-w-6xl mx-auto min-w-0">
+      
+      <!-- Верхняя панель задач -->
+      <div class="app-card rounded-xl p-4 sm:p-5 min-w-0">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="min-w-0">
+            <h2 class="text-base sm:text-lg font-extrabold text-main">✅ Личный трекер задач</h2>
+            <p class="text-xs text-muted">Персональный список задач текущего профиля с приоритетами и сроками</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="text-left sm:text-right">
+              <div id="tasksProgressText" class="text-xs font-extrabold text-teal-400">Выполнено: 0 из 0</div>
+              <div class="w-32 h-2 bg-slate-700/40 rounded-full overflow-hidden mt-1">
+                <div id="tasksProgressBar" class="h-full bg-teal-400 transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Форма быстрого добавления задачи -->
+        <form onsubmit="addPersonalTask(event)" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+          <input id="taskTitleInput" type="text" required placeholder="Что нужно сделать? Например: Подготовить презентацию..." class="sm:col-span-5 app-input rounded-xl px-3.5 py-2.5" />
+          <select id="taskPriorityInput" aria-label="Приоритет задачи" class="sm:col-span-2 app-input rounded-xl px-3 py-2.5 font-semibold">
+            <option value="high">🔴 Высокий приоритет</option>
+            <option value="medium" selected>🟡 Средний приоритет</option>
+            <option value="low">🟢 Низкий приоритет</option>
+          </select>
+          <input id="taskTagInput" type="text" placeholder="Тег (Учёба, Проект)" class="sm:col-span-2 app-input rounded-xl px-3 py-2.5" />
+          <input id="taskDateInput" type="date" aria-label="Срок выполнения" class="sm:col-span-2 app-input rounded-xl px-3 py-2.5" />
+          <button type="submit" aria-label="Добавить задачу" class="sm:col-span-1 bg-teal-500 hover:bg-teal-400 text-slate-950 font-extrabold rounded-xl py-2.5 text-sm cursor-pointer min-h-[40px]">
+            +
+          </button>
+        </form>
+
+        <!-- Фильтры задач -->
+        <div class="scroll-strip flex items-center gap-1.5 mt-4 pt-3 border-t border-slate-700/30 overflow-x-auto pb-0.5">
+          <button onclick="setTaskFilter('all')" id="tfilter-all" class="tfilter-btn min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-bold bg-teal-500 text-slate-950 cursor-pointer whitespace-nowrap">Все</button>
+          <button onclick="setTaskFilter('active')" id="tfilter-active" class="tfilter-btn min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-bold text-muted hover:text-main cursor-pointer whitespace-nowrap">В работе</button>
+          <button onclick="setTaskFilter('high')" id="tfilter-high" class="tfilter-btn min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-bold text-muted hover:text-main cursor-pointer whitespace-nowrap">🔥 Срочные</button>
+          <button onclick="setTaskFilter('done')" id="tfilter-done" class="tfilter-btn min-h-[36px] px-3.5 py-1 rounded-lg text-xs font-bold text-muted hover:text-main cursor-pointer whitespace-nowrap">Выполненные</button>
+        </div>
+      </div>
+
+      <!-- Список задач -->
+      <div id="tasksListContainer" class="grid grid-cols-1 md:grid-cols-2 gap-3 min-w-0"></div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- РАЗДЕЛ 5: НАСТРОЙКИ И РЕЗЕРВНОЕ КОПИРОВАНИЕ                           -->
+    <!-- ===================================================================== -->
+    <div id="view-settings" class="hidden space-y-4 sm:space-y-5 fade-in max-w-5xl mx-auto min-w-0">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 min-w-0">
+        
+        <div class="app-card rounded-2xl p-4 sm:p-5 min-w-0">
+          <h2 class="text-base font-bold text-main mb-1">Управление привычками профиля</h2>
+          <p class="text-xs text-muted mb-4">Редактируйте цели или удаляйте привычки текущего пользователя.</p>
+          <div id="settingsHabitsList" class="space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="space-y-4 sm:space-y-5 min-w-0">
+          <div class="app-card rounded-2xl p-4 sm:p-5">
+            <h2 class="text-base font-bold text-main mb-1">Оформление и личный кабинет</h2>
+            <p class="text-xs text-muted mb-4">Настройте тему, фон или переключитесь на другой аккаунт.</p>
+            <div class="grid grid-cols-2 gap-2.5 mb-3">
+              <button onclick="toggleTheme()" class="min-h-[42px] py-2.5 px-3 rounded-xl app-subcard hover:border-teal-400 text-xs font-bold text-main cursor-pointer">
+                🌓 Сменить тему
+              </button>
+              <button onclick="openBgModal()" class="min-h-[42px] py-2.5 px-3 rounded-xl app-subcard hover:border-teal-400 text-xs font-bold text-main cursor-pointer">
+                🎨 Настроить фон
+              </button>
+            </div>
+            <button onclick="openProfileModal()" class="min-h-[42px] w-full py-2.5 px-3 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 text-xs font-bold cursor-pointer mb-2">
+              👤 Управление аккаунтами личного кабинета
+            </button>
+            <button onclick="resetDemoData()" class="min-h-[42px] w-full py-2.5 rounded-xl border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-xs font-semibold transition cursor-pointer">
+              ↻ Восстановить демо-данные для этого профиля
+            </button>
+          </div>
+
+          <div class="app-card rounded-2xl p-4 sm:p-5">
+            <h2 class="text-base font-bold text-main mb-1">Резервная копия данных (JSON)</h2>
+            <p class="text-xs text-muted mb-4">Экспортируйте весь кабинет (привычки, финансы, расписание, задачи) в файл.</p>
+            <div class="grid grid-cols-2 gap-2.5">
+              <button onclick="exportProfileJSON()" class="min-h-[42px] px-4 py-2.5 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-bold cursor-pointer">
+                ⬇ Скачать JSON
+              </button>
+              <label class="min-h-[42px] px-4 py-2.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 text-xs font-bold cursor-pointer text-center flex items-center justify-center">
+                ⬆ Загрузить JSON
+                <input type="file" accept=".json" onchange="importProfileJSON(event)" class="hidden" />
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ==================== КОНСТАНТЫ И НАЧАЛЬНЫЕ ДАННЫЕ ====================
+    const STORAGE_KEY = 'lichniy_shtab_lifestats_v2';
+
+    const MONTHS = [
+      { id: 'apr', short: 'АПР', name: 'АПРЕЛЬ 2026', days: 30, startDow: 2 },
+      { id: 'may', short: 'МАЙ', name: 'МАЙ 2026', days: 31, startDow: 4 },
+      { id: 'jun', short: 'ИЮН', name: 'ИЮНЬ 2026', days: 30, startDow: 0 },
+      { id: 'jul', short: 'ИЮЛ', name: 'ИЮЛЬ 2026', days: 31, startDow: 2 },
+      { id: 'aug', short: 'АВГ', name: 'АВГУСТ 2026', days: 31, startDow: 5 },
+      { id: 'sep', short: 'СЕН', name: 'СЕНТЯБРЬ 2026', days: 30, startDow: 1 },
+      { id: 'oct', short: 'ОКТ', name: 'ОКТЯБРЬ 2026', days: 31, startDow: 3 },
+      { id: 'nov', short: 'НОЯ', name: 'НОЯБРЬ 2026', days: 30, startDow: 6 },
+      { id: 'dec', short: 'ДЕК', name: 'ДЕКАБРЬ 2026', days: 31, startDow: 1 }
+    ];
+
+    const DOW_NAMES = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'];
+    const SCHEDULE_DAYS = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+
+    const WEEK_COLORS = [
+      { name: '1 НЕДЕЛЯ', hex: '#EC4899' },
+      { name: '2 НЕДЕЛЯ', hex: '#8B5CF6' },
+      { name: '3 НЕДЕЛЯ', hex: '#38BDF8' },
+      { name: '4 НЕДЕЛЯ', hex: '#F59E0B' },
+      { name: '5 НЕДЕЛЯ', hex: '#14B8A6' }
+    ];
+
+    const DEFAULT_HABITS = [
+      { id: 'h1', emoji: '⏰', name: 'Подъем до 06:00', goal: 31 },
+      { id: 'h2', emoji: '🏃', name: 'Пробежка 30 минут', goal: 31 },
+      { id: 'h3', emoji: '🚿', name: 'Холодный душ', goal: 31 },
+      { id: 'h4', emoji: '📖', name: 'Чтение 10 страниц', goal: 31 },
+      { id: 'h5', emoji: '💪', name: 'Тренировка', goal: 31 },
+      { id: 'h6', emoji: '🇬🇧', name: 'Английский', goal: 31 },
+      { id: 'h7', emoji: '🧘', name: 'Медитация', goal: 31 },
+      { id: 'h8', emoji: '😴', name: 'Сон в 23:00', goal: 31 }
+    ];
+
+    const DEFAULT_FINANCE_CATEGORIES = [
+      { id: 'cat_inc_1', emoji: '💼', name: 'Основной доход / Стипендия', type: 'income', plan: 45000, color: '#10B981' },
+      { id: 'cat_inc_2', emoji: '💻', name: 'Фриланс / Подработка', type: 'income', plan: 20000, color: '#14B8A6' },
+      { id: 'cat_exp_1', emoji: '🛒', name: 'Продукты и питание', type: 'expense', plan: 16000, color: '#EC4899' },
+      { id: 'cat_exp_2', emoji: '🚌', name: 'Транспорт и связь', type: 'expense', plan: 5000, color: '#38BDF8' },
+      { id: 'cat_exp_3', emoji: '🏠', name: 'Жильё и коммуналка', type: 'expense', plan: 15000, color: '#8B5CF6' },
+      { id: 'cat_exp_4', emoji: '📚', name: 'Учёба и книги', type: 'expense', plan: 6000, color: '#F59E0B' },
+      { id: 'cat_exp_5', emoji: '🎯', name: 'Досуг и спорт', type: 'expense', plan: 5000, color: '#F43F5E' }
+    ];
+
+    const DEFAULT_TRANSACTIONS = [
+      { id: 'tx1', date: '2026-07-02', categoryId: 'cat_inc_1', note: 'Аванс / Основная выплата', amount: 45000 },
+      { id: 'tx2', date: '2026-07-03', categoryId: 'cat_exp_3', note: 'Оплата аренды и интернета', amount: 14500 },
+      { id: 'tx3', date: '2026-07-05', categoryId: 'cat_exp_1', note: 'Супермаркет на неделю', amount: 4200 },
+      { id: 'tx4', date: '2026-07-09', categoryId: 'cat_exp_2', note: 'Проездной и мобильная связь', amount: 2100 },
+      { id: 'tx5', date: '2026-07-12', categoryId: 'cat_inc_2', note: 'Верстка лендинга', amount: 18500 },
+      { id: 'tx6', date: '2026-07-14', categoryId: 'cat_exp_1', note: 'Продукты и кофе', amount: 5300 },
+      { id: 'tx7', date: '2026-07-18', categoryId: 'cat_exp_4', note: 'Курс по UI/UX и книги', amount: 4800 },
+      { id: 'tx8', date: '2026-07-21', categoryId: 'cat_exp_5', note: 'Абонемент в зал', amount: 3500 },
+      { id: 'tx9', date: '2026-07-24', categoryId: 'cat_exp_1', note: 'Доставка еды и продукты', amount: 3900 }
+    ];
+
+    const DEFAULT_SCHEDULE = {
+      0: [
+        { id: 'l1', start: '08:00', end: '09:20', subject: 'Высшая математика', type: 'Лекция', room: 'Ауд. 201', teacher: 'Доц. Каримов А.Б.' },
+        { id: 'l2', start: '09:30', end: '10:50', subject: 'Алгоритмы и структуры данных', type: 'Практика', room: 'Комп. класс 4', teacher: 'Исаева М.К.' },
+        { id: 'l3', start: '11:10', end: '12:30', subject: 'Английский язык (IT)', type: 'Семинар', room: 'Ауд. 312', teacher: 'Смирнова Е.В.' }
+      ],
+      1: [
+        { id: 'l4', start: '09:30', end: '10:50', subject: 'Базы данных и SQL', type: 'Лекция', room: 'Ауд. 105', teacher: 'Проф. Алиев Р.Т.' },
+        { id: 'l5', start: '11:10', end: '12:30', subject: 'Базы данных и SQL', type: 'Лабораторная', room: 'Лаб. 208', teacher: 'Алиев Р.Т.' }
+      ],
+      2: [
+        { id: 'l6', start: '08:00', end: '09:20', subject: 'Веб-программирование', type: 'Практика', room: 'Комп. класс 2', teacher: 'Орлов Д.С.' },
+        { id: 'l7', start: '09:30', end: '10:50', subject: 'Экономика и финансы', type: 'Лекция', room: 'Ауд. 401', teacher: 'Нурова Г.М.' }
+      ],
+      3: [
+        { id: 'l8', start: '11:10', end: '12:30', subject: 'Проектирование интерфейсов (UI/UX)', type: 'Практика', room: 'Медиа-центр', teacher: 'Ким А.В.' },
+        { id: 'l9', start: '13:00', end: '14:20', subject: 'Физическая культура', type: 'Практика', room: 'Спорткомплекс', teacher: 'Беков Т.Н.' }
+      ],
+      4: [
+        { id: 'l10', start: '08:00', end: '09:20', subject: 'Операционные системы', type: 'Лекция', room: 'Ауд. 204', teacher: 'Садыков Э.Р.' },
+        { id: 'l11', start: '09:30', end: '10:50', subject: 'Операционные системы', type: 'Лабораторная', room: 'Лаб. 110', teacher: 'Садыков Э.Р.' }
+      ],
+      5: [
+        { id: 'l12', start: '09:30', end: '10:50', subject: 'Проектный практикум / Стартап', type: 'Семинар', room: 'Коворкинг', teacher: 'Куратор группы' }
+      ]
+    };
+
+    const DEFAULT_TASKS = [
+      { id: 't1', title: 'Сдать лабораторную работу №3 по базам данных', priority: 'high', tag: 'Учёба', dueDate: '2026-07-28', done: false },
+      { id: 't2', title: 'Сверстать макет дашборда в Figma и проверить адаптив', priority: 'high', tag: 'Проект', dueDate: '2026-07-27', done: false },
+      { id: 't3', title: 'Свести бюджет за месяц и отложить 15% в резерв', priority: 'medium', tag: 'Финансы', dueDate: '2026-07-30', done: true },
+      { id: 't4', title: 'Повторить 40 новых английских слов по теме IT', priority: 'low', tag: 'Саморазвитие', dueDate: '2026-07-29', done: false }
+    ];
+
+    let appState = {
+      activeProfileId: 'user_1',
+      activeMonth: 'jul',
+      activeTab: 'habits',
+      theme: 'dark',
+      financeChartMode: 'weekly',
+      taskFilter: 'all',
+      appInstalled: false,
+      profiles: {}
+    };
+
+    // ==================== ИНИЦИАЛИЗАЦИЯ И СОХРАНЕНИЕ ====================
+    function generateDemoChecks() {
+      const checks = {};
+      MONTHS.forEach(m => {
+        checks[m.id] = {};
+        DEFAULT_HABITS.forEach((h, hIdx) => {
+          checks[m.id][h.id] = {};
+          const limit = m.id === 'jul' ? 24 : (m.id === 'aug' ? 12 : m.days);
+          for (let d = 1; d <= limit; d++) {
+            const score = Math.sin(d * 0.45 + hIdx * 1.1) + Math.cos(d * 0.2 - hIdx * 0.5);
+            if (score > -0.25) checks[m.id][h.id][d] = true;
+          }
+        });
+      });
+      return checks;
+    }
+
+    function createFullDemoProfile(id, name, role, color) {
+      return {
+        id,
+        name,
+        role: role || 'Студент / Личный штаб',
+        color: color || '#14B8A6',
+        background: { type: 'preset', value: 'default', dim: 45 },
+        habits: JSON.parse(JSON.stringify(DEFAULT_HABITS)),
+        checks: generateDemoChecks(),
+        finance: {
+          categories: JSON.parse(JSON.stringify(DEFAULT_FINANCE_CATEGORIES)),
+          transactions: JSON.parse(JSON.stringify(DEFAULT_TRANSACTIONS))
+        },
+        schedule: JSON.parse(JSON.stringify(DEFAULT_SCHEDULE)),
+        tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS))
+      };
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.profiles && Object.keys(parsed.profiles).length > 0) {
+            appState = { ...appState, ...parsed };
+            if (!appState.profiles[appState.activeProfileId]) {
+              appState.activeProfileId = Object.keys(appState.profiles)[0];
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.error('Ошибка чтения localStorage:', e);
+      }
+
+      appState.profiles = {
+        user_1: createFullDemoProfile('user_1', 'Александр', 'Группа ИС-24', '#14B8A6')
+      };
+      saveState();
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (e) {
+        showToast('Память браузера заполнена (уменьшите размер фонового фото)');
+      }
+    }
+
+    function getCurrentProfile() {
+      const p = appState.profiles[appState.activeProfileId];
+      if (!p.habits) p.habits = [];
+      if (!p.checks) p.checks = {};
+      if (!p.finance) p.finance = { categories: [], transactions: [], budgetOverride: null };
+      if (!p.schedule) p.schedule = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] };
+      if (!p.tasks) p.tasks = [];
+      if (!p.background) p.background = { type: 'preset', value: 'default', dim: 45 };
+      return p;
+    }
+
+    function getCurrentMonthObj() {
+      return MONTHS.find(m => m.id === appState.activeMonth) || MONTHS[3];
+    }
+
+    function getWeekIndexForDay(day) {
+      return Math.min(4, Math.floor((day - 1) / 7));
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatMoney(num) {
+      return Math.round(num).toLocaleString('ru-RU') + ' сом';
+    }
+
+    // ==================== УВЕДОМЛЕНИЯ И МОДАЛЬНЫЕ ОКНА ====================
+    let toastTimer = null;
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastText').textContent = text;
+      toast.classList.remove('hidden');
+      toast.classList.add('flex');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toast.classList.remove('flex');
+      }, 2500);
+    }
+
+    function openModal(id) {
+      const m = document.getElementById(id);
+      m.classList.remove('hidden');
+      m.classList.add('flex');
+    }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      m.classList.add('hidden');
+      m.classList.remove('flex');
+    }
+
+    function handleBackdropClick(event, modalId) {
+      if (event.target && event.target.id === modalId) {
+        closeModal(modalId);
+      }
+    }
+
+    // ==================== ТЕМА И ЗАДНИЙ ФОН ====================
+    function applyTheme() {
+      const html = document.documentElement;
+      const isLight = appState.theme === 'light';
+      if (isLight) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        document.getElementById('themeIcon').textContent = '☀️';
+        document.getElementById('themeLabel').textContent = 'Светлая';
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        document.getElementById('themeIcon').textContent = '🌙';
+        document.getElementById('themeLabel').textContent = 'Тёмная';
+      }
+      applyBackground();
+    }
+
+    function toggleTheme() {
+      appState.theme = appState.theme === 'dark' ? 'light' : 'dark';
+      saveState();
+      applyTheme();
+      showToast(appState.theme === 'dark' ? 'Включена тёмная тема' : 'Включена светлая тема');
+    }
+
+    function applyBackground() {
+      const profile = getCurrentProfile();
+      const bg = profile.background || { type: 'preset', value: 'default', dim: 45 };
+      const layer = document.getElementById('customBgLayer');
+      const overlay = document.getElementById('customBgOverlay');
+      const isLight = appState.theme === 'light';
+
+      layer.style.backgroundImage = 'none';
+      layer.style.backgroundColor = 'transparent';
+
+      if (bg.type === 'preset') {
+        if (bg.value === 'aurora') {
+          layer.style.backgroundImage = 'radial-gradient(circle at 15% 15%, #0f766e, #090d16 60%, #3b0764)';
+        } else if (bg.value === 'sunset') {
+          layer.style.backgroundImage = 'linear-gradient(135deg, #1e1b4b 0%, #701a75 50%, #9a3412 100%)';
+        } else if (bg.value === 'ocean') {
+          layer.style.backgroundImage = 'linear-gradient(135deg, #020617 0%, #0c4a6e 55%, #115e59 100%)';
+        } else if (bg.value === 'royal') {
+          layer.style.backgroundImage = 'linear-gradient(135deg, #09090b 0%, #312e81 60%, #4c1d95 100%)';
+        } else if (bg.value === 'lightClean') {
+          layer.style.backgroundImage = 'linear-gradient(135deg, #e0f2fe 0%, #f1f5f9 50%, #fae8ff 100%)';
+        } else {
+          layer.style.backgroundColor = isLight ? '#F1F5F9' : '#070B14';
+        }
+      } else if (bg.type === 'color') {
+        layer.style.backgroundColor = bg.value;
+      } else if (bg.type === 'image') {
+        layer.style.backgroundImage = `url("${bg.value}")`;
+      }
+
+      const dimOpacity = (bg.type === 'preset' && bg.value === 'default') ? 0 : (Number(bg.dim ?? 45) / 100);
+      overlay.style.backgroundColor = isLight
+        ? `rgba(241, 245, 249, ${dimOpacity})`
+        : `rgba(7, 11, 20, ${dimOpacity})`;
+    }
+
+    function openBgModal() {
+      const profile = getCurrentProfile();
+      const dim = profile.background?.dim ?? 45;
+      document.getElementById('bgDimSlider').value = dim;
+      document.getElementById('bgDimLabel').textContent = `${dim}%`;
+      openModal('bgModal');
+    }
+
+    function applyBgPreset(presetName) {
+      const profile = getCurrentProfile();
+      profile.background = { ...profile.background, type: 'preset', value: presetName };
+      saveState();
+      applyBackground();
+      showToast('Фон обновлён');
+    }
+
+    function applyCustomColor() {
+      const color = document.getElementById('bgColorPicker').value;
+      const profile = getCurrentProfile();
+      profile.background = { ...profile.background, type: 'color', value: color };
+      saveState();
+      applyBackground();
+      showToast('Цвет фона применён');
+    }
+
+    function applyBgImageUrl() {
+      const url = document.getElementById('bgImageUrlInput').value.trim();
+      if (!url) return;
+      const profile = getCurrentProfile();
+      profile.background = { ...profile.background, type: 'image', value: url };
+      saveState();
+      applyBackground();
+      showToast('Фоновое изображение установлено');
+    }
+
+    function handleBgFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const profile = getCurrentProfile();
+        profile.background = { ...profile.background, type: 'image', value: e.target.result };
+        saveState();
+        applyBackground();
+        showToast('Фото загружено на фон');
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function updateBgDim(val) {
+      document.getElementById('bgDimLabel').textContent = `${val}%`;
+      const profile = getCurrentProfile();
+      profile.background = { ...profile.background, dim: Number(val) };
+      saveState();
+      applyBackground();
+    }
+
+    // ==================== ЛИЧНЫЙ КАБИНЕТ / ПРОФИЛИ ====================
+    function openProfileModal() {
+      const profile = getCurrentProfile();
+      document.getElementById('editCurrentName').value = profile.name;
+      document.getElementById('editCurrentRole').value = profile.role || '';
+      renderProfileList();
+      openModal('profileModal');
+    }
+
+    function saveCurrentProfileMeta() {
+      const profile = getCurrentProfile();
+      const newName = document.getElementById('editCurrentName').value.trim();
+      const newRole = document.getElementById('editCurrentRole').value.trim();
+      if (!newName) return;
+      profile.name = newName;
+      profile.role = newRole || 'Личный кабинет';
+      saveState();
+      renderHeaderProfile();
+      renderProfileList();
+      showToast('Данные профиля обновлены');
+    }
+
+    function renderProfileList() {
+      const list = document.getElementById('profileList');
+      const profiles = Object.values(appState.profiles);
+      list.innerHTML = profiles.map(p => {
+        const isActive = p.id === appState.activeProfileId;
+        const initial = (p.name || 'П').trim().charAt(0).toUpperCase();
+        return `
+          <div class="flex items-center justify-between p-2.5 rounded-xl border ${isActive ? 'bg-teal-500/10 border-teal-500/50' : 'app-subcard'} transition">
+            <button onclick="switchProfile('${p.id}')" class="flex items-center gap-3 flex-1 text-left cursor-pointer min-w-0">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-slate-950 shrink-0" style="background-color: ${p.color || '#14B8A6'}">
+                ${initial}
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-main truncate">${escapeHtml(p.name)}</div>
+                <div class="text-[11px] text-muted truncate">${escapeHtml(p.role || 'Кабинет')} • ${isActive ? 'Активен' : 'Войти'}</div>
+              </div>
+            </button>
+            ${profiles.length > 1 ? `
+              <button onclick="deleteProfile('${p.id}')" aria-label="Удалить профиль" class="text-muted hover:text-rose-400 min-w-[36px] min-h-[36px] flex items-center justify-center rounded-lg text-xs cursor-pointer" title="Удалить">🗑</button>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function createProfile() {
+      const name = document.getElementById('newProfileName').value.trim();
+      const role = document.getElementById('newProfileRole').value.trim();
+      if (!name) {
+        showToast('Введите имя пользователя');
+        return;
+      }
+      const colors = ['#14B8A6', '#EC4899', '#8B5CF6', '#38BDF8', '#F59E0B'];
+      const color = colors[Object.keys(appState.profiles).length % colors.length];
+      const id = 'user_' + Date.now();
+      appState.profiles[id] = {
+        id,
+        name,
+        role: role || 'Личный кабинет',
+        color,
+        background: { type: 'preset', value: 'default', dim: 45 },
+        habits: JSON.parse(JSON.stringify(DEFAULT_HABITS)),
+        checks: {},
+        finance: {
+          categories: JSON.parse(JSON.stringify(DEFAULT_FINANCE_CATEGORIES)),
+          transactions: []
+        },
+        schedule: { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] },
+        tasks: []
+      };
+      appState.activeProfileId = id;
+      document.getElementById('newProfileName').value = '';
+      document.getElementById('newProfileRole').value = '';
+      saveState();
+      closeModal('profileModal');
+      renderAll();
+      showToast(`Добро пожаловать, ${name}!`);
+    }
+
+    function switchProfile(id) {
+      if (!appState.profiles[id]) return;
+      appState.activeProfileId = id;
+      saveState();
+      closeModal('profileModal');
+      renderAll();
+      showToast(`Активный кабинет: ${appState.profiles[id].name}`);
+    }
+
+    function deleteProfile(id) {
+      if (Object.keys(appState.profiles).length <= 1) return;
+      delete appState.profiles[id];
+      if (appState.activeProfileId === id) {
+        appState.activeProfileId = Object.keys(appState.profiles)[0];
+      }
+      saveState();
+      renderProfileList();
+      renderAll();
+      showToast('Аккаунт удалён');
+    }
+
+    function renderHeaderProfile() {
+      const p = getCurrentProfile();
+      const initial = (p.name || 'П').trim().charAt(0).toUpperCase();
+      const av = document.getElementById('headerAvatar');
+      av.textContent = initial;
+      av.style.backgroundColor = p.color || '#14B8A6';
+      document.getElementById('headerUserName').textContent = p.name;
+      document.getElementById('headerUserRole').textContent = p.role || 'Кабинет ▾';
+    }
+
+    // ==================== НАВИГАЦИЯ ПО ВКЛАДКАМ ====================
+    function switchTab(tabName) {
+      appState.activeTab = tabName;
+      ['habits', 'finance', 'schedule', 'tasks', 'settings'].forEach(t => {
+        const view = document.getElementById(`view-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tabName) {
+          view.classList.remove('hidden');
+          btn.classList.add('bg-teal-500', 'text-slate-950');
+          btn.classList.remove('text-muted', 'hover:text-main');
+        } else {
+          view.classList.add('hidden');
+          btn.classList.remove('bg-teal-500', 'text-slate-950');
+          btn.classList.add('text-muted', 'hover:text-main');
+        }
+      });
+
+      if (tabName === 'habits') renderHabitsDashboard();
+      if (tabName === 'finance') renderFinanceDashboard();
+      if (tabName === 'schedule') renderSchedule();
+      if (tabName === 'tasks') renderTasks();
+      if (tabName === 'settings') renderSettings();
+    }
+
+    // ==================== МОДУЛЬ 1: ПРИВЫЧКИ ====================
+    function switchMonth(monthId) {
+      appState.activeMonth = monthId;
+      saveState();
+      renderHabitsDashboard();
+    }
+
+    function renderMonthTabs() {
+      const container = document.getElementById('monthTabs');
+      container.innerHTML = MONTHS.map(m => {
+        const active = m.id === appState.activeMonth;
+        return `
+          <button onclick="switchMonth('${m.id}')" class="min-h-[36px] px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
+            active ? 'bg-teal-500 text-slate-950' : 'text-muted hover:text-main'
+          }">${m.short}</button>
+        `;
+      }).join('');
+    }
+
+    function openAddHabitModal() {
+      document.getElementById('habitModalTitle').textContent = 'Новая привычка';
+      document.getElementById('habitModalSubmitBtn').textContent = 'Добавить';
+      document.getElementById('editHabitIdInput').value = '';
+      document.getElementById('quickHabitEmoji').value = '⚡';
+      document.getElementById('quickHabitName').value = '';
+      document.getElementById('quickHabitGoal').value = getCurrentMonthObj().days;
+      openModal('habitModal');
+      setTimeout(() => document.getElementById('quickHabitName').focus(), 50);
+    }
+
+    function openEditHabitModal(habitId) {
+      const profile = getCurrentProfile();
+      const h = profile.habits.find(x => x.id === habitId);
+      if (!h) return;
+      document.getElementById('habitModalTitle').textContent = 'Редактировать привычку';
+      document.getElementById('habitModalSubmitBtn').textContent = 'Сохранить';
+      document.getElementById('editHabitIdInput').value = h.id;
+      document.getElementById('quickHabitEmoji').value = h.emoji || '⚡';
+      document.getElementById('quickHabitName').value = h.name || '';
+      document.getElementById('quickHabitGoal').value = h.goal || 31;
+      openModal('habitModal');
+      setTimeout(() => document.getElementById('quickHabitName').focus(), 50);
+    }
+
+    function saveHabitFromModal(e) {
+      if (e) e.preventDefault();
+      const editId = document.getElementById('editHabitIdInput').value;
+      const emoji = document.getElementById('quickHabitEmoji').value.trim() || '⚡';
+      const name = document.getElementById('quickHabitName').value.trim();
+      const goal = Math.min(31, Math.max(1, parseInt(document.getElementById('quickHabitGoal').value, 10) || 31));
+      if (!name) {
+        showToast('Введите название привычки');
+        return;
+      }
+
+      const profile = getCurrentProfile();
+      if (editId) {
+        const habit = profile.habits.find(h => h.id === editId);
+        if (habit) {
+          habit.emoji = emoji;
+          habit.name = name;
+          habit.goal = goal;
+        }
+        showToast(`Привычка «${name}» обновлена`);
+      } else {
+        profile.habits.push({ id: 'h_' + Date.now(), emoji, name, goal });
+        showToast(`Привычка «${name}» добавлена`);
+      }
+
+      saveState();
+      closeModal('habitModal');
+      renderHabitsDashboard();
+    }
+
+    function addHabitInline(e) {
+      e.preventDefault();
+      const emojiInput = document.getElementById('inlineHabitEmoji');
+      const nameInput = document.getElementById('inlineHabitName');
+      const goalInput = document.getElementById('inlineHabitGoal');
+
+      const emoji = emojiInput.value.trim() || '🔥';
+      const name = nameInput.value.trim();
+      const goal = Math.min(31, Math.max(1, parseInt(goalInput.value, 10) || 31));
+      if (!name) return;
+
+      const profile = getCurrentProfile();
+      profile.habits.push({ id: 'h_' + Date.now(), emoji, name, goal });
+      nameInput.value = '';
+      saveState();
+      renderHabitsDashboard();
+      showToast(`Привычка «${name}» добавлена`);
+    }
+
+    function deleteHabit(id) {
+      const profile = getCurrentProfile();
+      const target = profile.habits.find(h => h.id === id);
+      profile.habits = profile.habits.filter(h => h.id !== id);
+      if (profile.checks) {
+        Object.keys(profile.checks).forEach(mId => {
+          if (profile.checks[mId] && profile.checks[mId][id]) {
+            delete profile.checks[mId][id];
+          }
+        });
+      }
+      saveState();
+      renderHabitsDashboard();
+      if (!document.getElementById('view-settings').classList.contains('hidden')) {
+        renderSettings();
+      }
+      showToast(target ? `Привычка «${target.name}» удалена` : 'Привычка удалена');
+    }
+
+    function toggleCheck(habitId, day) {
+      const profile = getCurrentProfile();
+      const monthId = appState.activeMonth;
+      if (!profile.checks[monthId]) profile.checks[monthId] = {};
+      if (!profile.checks[monthId][habitId]) profile.checks[monthId][habitId] = {};
+
+      if (profile.checks[monthId][habitId][day]) {
+        delete profile.checks[monthId][habitId][day];
+      } else {
+        profile.checks[monthId][habitId][day] = true;
+      }
+      saveState();
+      renderHabitsDashboard();
+    }
+
+    function calculateHabitStats() {
+      const profile = getCurrentProfile();
+      const month = getCurrentMonthObj();
+      const monthChecks = (profile.checks && profile.checks[month.id]) || {};
+      const habits = profile.habits || [];
+      const daysCount = month.days;
+
+      const dailyStats = [];
+      let totalCompleted = 0;
+
+      for (let d = 1; d <= daysCount; d++) {
+        let doneToday = 0;
+        habits.forEach(h => {
+          if (monthChecks[h.id] && monthChecks[h.id][d]) doneToday++;
+        });
+        totalCompleted += doneToday;
+        const pct = habits.length > 0 ? Math.round((doneToday / habits.length) * 100) : 0;
+        dailyStats.push({ day: d, done: doneToday, total: habits.length, pct });
+      }
+
+      const totalGoal = habits.reduce((s, h) => s + Math.min(daysCount, Number(h.goal) || daysCount), 0);
+      const globalPercent = totalGoal > 0 ? Math.min(100, (totalCompleted / totalGoal) * 100) : 0;
+      const remaining = Math.max(0, totalGoal - totalCompleted);
+      const avgDailyPct = dailyStats.length > 0 ? Math.round(dailyStats.reduce((s, x) => s + x.pct, 0) / dailyStats.length) : 0;
+
+      const weeks = [0, 1, 2, 3, 4].map(wIdx => {
+        const startDay = wIdx * 7 + 1;
+        const endDay = Math.min(daysCount, (wIdx + 1) * 7);
+        if (startDay > daysCount) return { wIdx, days: 0, done: 0, max: 0, pct: 0 };
+        const span = endDay - startDay + 1;
+        let done = 0;
+        for (let d = startDay; d <= endDay; d++) done += dailyStats[d - 1].done;
+        const max = span * habits.length;
+        return { wIdx, days: span, done, max, pct: max > 0 ? Math.round((done / max) * 100) : 0 };
+      });
+
+      const habitStats = habits.map(h => {
+        const hMap = monthChecks[h.id] || {};
+        let done = 0, currentStreak = 0, bestStreak = 0, tempStreak = 0;
+        for (let d = 1; d <= daysCount; d++) {
+          if (hMap[d]) {
+            done++;
+            tempStreak++;
+            if (tempStreak > bestStreak) bestStreak = tempStreak;
+          } else {
+            tempStreak = 0;
+          }
+        }
+        let lastDay = 0;
+        for (let d = daysCount; d >= 1; d--) { if (hMap[d]) { lastDay = d; break; } }
+        if (lastDay > 0) {
+          for (let d = lastDay; d >= 1; d--) { if (hMap[d]) currentStreak++; else break; }
+        }
+        const goal = Math.min(daysCount, Number(h.goal) || daysCount);
+        const left = Math.max(0, goal - done);
+        const pct = goal > 0 ? Math.min(100, Math.round((done / goal) * 100)) : 0;
+        return { ...h, goal, done, left, pct, currentStreak, bestStreak, checks: hMap };
+      });
+
+      return { month, dailyStats, totalCompleted, totalGoal, remaining, globalPercent, avgDailyPct, weeks, habitStats };
+    }
+
+    function renderHabitsDashboard() {
+      renderMonthTabs();
+      const stats = calculateHabitStats();
+
+      // Заголовок и кольцевой прогресс
+      document.getElementById('activeMonthTitle').textContent = `• ${stats.month.name} •`;
+      document.getElementById('monthDaysBadge').textContent = `${stats.month.days} дн.`;
+      const circ = 2 * Math.PI * 48;
+      document.getElementById('donutProgressCircle').style.strokeDashoffset = (circ - (stats.globalPercent / 100) * circ).toFixed(2);
+      document.getElementById('donutPercentText').textContent = `${stats.globalPercent.toFixed(1).replace('.', ',')}%`;
+      document.getElementById('ringCompletedCount').textContent = stats.totalCompleted;
+      document.getElementById('ringRemainingCount').textContent = stats.remaining;
+
+      // Метрики
+      document.getElementById('metricGlobalRatio').textContent = `${stats.totalCompleted} / ${stats.totalGoal}`;
+      document.getElementById('metricGlobalBar').style.width = `${stats.globalPercent}%`;
+      document.getElementById('metricDoneTotal').textContent = stats.totalCompleted;
+      document.getElementById('metricDailyAvg').textContent = `${stats.avgDailyPct}%`;
+
+      // SVG линейный график
+      const svg = document.getElementById('areaChartSvg');
+      const W = 900, H = 180, padL = 34, padR = 14, padT = 14, padB = 24;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+      let grid = '';
+      [0, 25, 50, 75, 100].forEach(v => {
+        const y = padT + plotH - (v / 100) * plotH;
+        grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="rgba(148,163,184,0.18)" stroke-width="1" stroke-dasharray="3 3" />
+                 <text x="${padL - 8}" y="${y + 3}" text-anchor="end" fill="#64748B" font-size="10">${v}%</text>`;
+      });
+      const pts = stats.dailyStats.map((d, idx) => ({
+        x: padL + (stats.dailyStats.length > 1 ? (idx / (stats.dailyStats.length - 1)) * plotW : plotW / 2),
+        y: padT + plotH - (d.pct / 100) * plotH,
+        ...d
+      }));
+      let path = pts.length ? `M ${pts[0].x} ${pts[0].y}` : '';
+      for (let i = 0; i < pts.length - 1; i++) {
+        const cx = (pts[i].x + pts[i + 1].x) / 2;
+        path += ` C ${cx} ${pts[i].y}, ${cx} ${pts[i + 1].y}, ${pts[i + 1].x} ${pts[i + 1].y}`;
+      }
+      const area = pts.length ? `${path} L ${pts[pts.length - 1].x} ${padT + plotH} L ${pts[0].x} ${padT + plotH} Z` : '';
+      const dots = pts.map(p => {
+        const c = WEEK_COLORS[getWeekIndexForDay(p.day)].hex;
+        const infoText = `${p.day} ${stats.month.short}: ${p.pct}% (${p.done}/${p.total})`;
+        return `<text x="${p.x}" y="${H - 6}" text-anchor="middle" fill="#64748B" font-size="9.5">${p.day}</text>
+                <circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#0F172A" stroke="${c}" stroke-width="2" />
+                <circle cx="${p.x}" cy="${p.y}" r="11" fill="transparent" class="cursor-pointer"
+                  onmouseenter="document.getElementById('chartHoverInfo').textContent='${infoText}'"
+                  onclick="document.getElementById('chartHoverInfo').textContent='${infoText}'" />`;
+      }).join('');
+      svg.innerHTML = `<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#14B8A6" stop-opacity="0.36" /><stop offset="100%" stop-color="#14B8A6" stop-opacity="0.01" />
+      </linearGradient></defs>${grid}<path d="${area}" fill="url(#areaGrad)" /><path d="${path}" fill="none" stroke="#14B8A6" stroke-width="2.5" />${dots}`;
+
+      // Недельная гистограмма
+      const headersRow = document.getElementById('weeklyHeadersRow');
+      headersRow.style.gridTemplateColumns = `repeat(${stats.month.days}, minmax(0, 1fr))`;
+      headersRow.innerHTML = stats.weeks.filter(w => w.days > 0).map(w => {
+        const c = WEEK_COLORS[w.wIdx].hex;
+        return `<div style="grid-column: span ${w.days}; border-bottom: 2px solid ${c}; color: ${c};" class="text-[10px] font-extrabold pb-1 truncate">${WEEK_COLORS[w.wIdx].name}</div>`;
+      }).join('');
+
+      document.getElementById('weeklyBarsContainer').innerHTML = stats.dailyStats.map(d => {
+        const c = WEEK_COLORS[getWeekIndexForDay(d.day)].hex;
+        return `<div class="flex-1 h-full flex flex-col justify-end items-center group">
+          <span class="text-[9px] font-bold text-muted mb-1">${d.done}</span>
+          <div class="w-full max-w-[18px] rounded-t-md transition-all" style="height:${Math.max(4, d.pct)}%; background-color:${c}; opacity:${d.done === 0 ? 0.2 : 0.92};"></div>
+        </div>`;
+      }).join('');
+
+      const activeWeeks = stats.weeks.filter(w => w.days > 0);
+      const footer = document.getElementById('weeklyFooterStats');
+      footer.style.gridTemplateColumns = `repeat(${activeWeeks.length}, minmax(0, 1fr))`;
+      footer.innerHTML = activeWeeks.map(w => {
+        const c = WEEK_COLORS[w.wIdx].hex;
+        return `<div class="app-subcard rounded-lg px-2.5 py-1.5 flex items-center justify-between">
+          <span class="text-[10px] font-bold" style="color:${c}">${w.done}/${w.max}</span>
+          <span class="text-xs font-extrabold text-main">${w.pct}%</span>
+        </div>`;
+      }).join('');
+
+      // Таблица привычек
+      document.getElementById('habitsCountBadge').textContent = `${stats.habitStats.length} привычек`;
+      const daysCount = stats.month.days;
+      let weekHead = `<th rowspan="2" class="sticky left-0 z-20 sticky-col px-3 py-2 text-left font-bold text-main min-w-[195px] sm:min-w-[230px] border-r border-slate-700/30">Привычка</th>
+                      <th rowspan="2" class="px-2 py-2 text-center font-bold text-muted w-12 border-r border-slate-700/30">Цель</th>`;
+      activeWeeks.forEach(w => {
+        const c = WEEK_COLORS[w.wIdx].hex;
+        weekHead += `<th colspan="${w.days}" class="py-1.5 text-center font-extrabold border-r border-slate-700/30" style="color:${c}; background-color:${c}15;">${WEEK_COLORS[w.wIdx].name}</th>`;
+      });
+      weekHead += `<th rowspan="2" class="px-2 py-2 text-center font-bold text-muted border-l border-slate-700/30">Вып.</th>
+                   <th rowspan="2" class="px-2 py-2 text-center font-bold text-muted">Ост.</th>
+                   <th rowspan="2" class="px-3 py-2 text-left font-bold text-muted min-w-[115px]">Прогресс</th>
+                   <th rowspan="2" class="px-2 py-2 text-center font-bold text-muted">Серия</th>
+                   <th rowspan="2" class="px-2 py-2 text-center font-bold text-muted">Рекорд</th>
+                   <th rowspan="2" class="px-2 py-2 text-center font-bold text-muted">Действия</th>`;
+
+      let dayHead = '';
+      for (let d = 1; d <= daysCount; d++) {
+        const dow = DOW_NAMES[(stats.month.startDow + d - 1) % 7];
+        dayHead += `<th class="py-1 px-0.5 text-center w-8 ${d % 7 === 0 ? 'border-r border-slate-700/30' : ''}">
+          <div class="text-[9px] text-faint">${dow}</div>
+          <div class="text-[10px] text-main font-bold">${d}</div>
+        </th>`;
+      }
+      document.getElementById('habitTableHead').innerHTML = `<tr class="border-b border-slate-700/30">${weekHead}</tr><tr>${dayHead}</tr>`;
+
+      if (stats.habitStats.length === 0) {
+        document.getElementById('habitTableBody').innerHTML = `
+          <tr>
+            <td colspan="${daysCount + 8}" class="py-10 text-center text-xs text-muted">
+              Список привычек пуст. Добавьте первую привычку через форму выше или кнопку «+ Добавить привычку».
+            </td>
+          </tr>
+        `;
+      } else {
+        document.getElementById('habitTableBody').innerHTML = stats.habitStats.map(h => {
+          let boxes = '';
+          for (let d = 1; d <= daysCount; d++) {
+            const checked = Boolean(h.checks[d]);
+            const c = WEEK_COLORS[getWeekIndexForDay(d)].hex;
+            boxes += `<td class="p-0.5 text-center ${d % 7 === 0 ? 'border-r border-slate-700/30' : ''}">
+              <button onclick="toggleCheck('${h.id}', ${d})" aria-label="${escapeHtml(h.name)}, день ${d}" class="habit-box w-6 h-6 sm:w-5 sm:h-5 rounded-[6px] sm:rounded-[5px] mx-auto flex items-center justify-center cursor-pointer border"
+                style="background-color:${checked ? c : 'transparent'}; border-color:${checked ? c : 'rgba(148,163,184,0.35)'};">
+                ${checked ? `<svg class="w-3.5 h-3.5 sm:w-3 sm:h-3 text-slate-950 stroke-[3]" viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"></polyline></svg>` : ''}
+              </button>
+            </td>`;
+          }
+          return `<tr class="hover:bg-slate-700/20 transition group">
+            <td class="sticky left-0 z-10 sticky-col px-3 py-2 font-semibold text-main border-r border-slate-700/30">
+              <div class="flex items-center justify-between gap-1.5 min-w-0">
+                <button onclick="openEditHabitModal('${h.id}')" class="flex items-center gap-2 truncate text-left hover:text-teal-400 transition cursor-pointer min-w-0" title="Нажмите, чтобы изменить привычку">
+                  <span>${escapeHtml(h.emoji)}</span>
+                  <span class="truncate">${escapeHtml(h.name)}</span>
+                </button>
+              </div>
+            </td>
+            <td class="px-2 py-2 text-center font-semibold text-muted border-r border-slate-700/30">${h.goal}</td>
+            ${boxes}
+            <td class="px-2 py-2 text-center font-bold text-main border-l border-slate-700/30">${h.done}</td>
+            <td class="px-2 py-2 text-center text-muted">${h.left}</td>
+            <td class="px-3 py-2">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 h-2 bg-slate-700/40 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full bg-teal-400" style="width:${h.pct}%"></div>
+                </div>
+                <span class="text-[11px] font-bold text-main w-8 text-right">${h.pct}%</span>
+              </div>
+            </td>
+            <td class="px-2 py-2 text-center font-bold text-amber-400">${h.currentStreak}</td>
+            <td class="px-2 py-2 text-center font-bold text-teal-400">${h.bestStreak}</td>
+            <td class="px-2 py-2 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1">
+                <button onclick="openEditHabitModal('${h.id}')" aria-label="Изменить привычку ${escapeHtml(h.name)}" class="min-w-[30px] min-h-[30px] inline-flex items-center justify-center text-sky-400 hover:bg-sky-500/15 rounded-lg cursor-pointer" title="Изменить привычку">✏️</button>
+                <button onclick="deleteHabit('${h.id}')" aria-label="Удалить привычку ${escapeHtml(h.name)}" class="min-w-[30px] min-h-[30px] inline-flex items-center justify-center text-rose-400 hover:bg-rose-500/15 rounded-lg cursor-pointer" title="Удалить привычку">🗑</button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('');
+      }
+
+      // ТОП привычек
+      const sorted = [...stats.habitStats].sort((a, b) => b.pct - a.pct || b.done - a.done);
+      document.getElementById('topHabitsList').innerHTML = sorted.length === 0
+        ? `<div class="text-xs text-muted text-center py-6">Добавьте привычки для отображения рейтинга</div>`
+        : sorted.map((h, i) => `
+          <div class="app-subcard rounded-xl p-2.5 flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg app-card text-[11px] font-extrabold flex items-center justify-center text-teal-400 shrink-0">${i + 1}</span>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between text-xs font-semibold text-main mb-1">
+                <span class="truncate">${escapeHtml(h.emoji)} ${escapeHtml(h.name)}</span>
+                <span class="font-extrabold ml-1">${h.pct}%</span>
+              </div>
+              <div class="w-full h-1.5 bg-slate-700/40 rounded-full overflow-hidden">
+                <div class="h-full bg-teal-400 rounded-full" style="width:${h.pct}%"></div>
+              </div>
+            </div>
+          </div>
+        `).join('');
+    }
+
+    // ==================== МОДУЛЬ 2: ФИНАНСЫ ====================
+    function setFinanceChartMode(mode) {
+      appState.financeChartMode = mode;
+      const btnW = document.getElementById('finModeWeekly');
+      const btnD = document.getElementById('finModeDaily');
+      if (mode === 'weekly') {
+        btnW.classList.add('bg-teal-500', 'text-slate-950');
+        btnW.classList.remove('text-muted');
+        btnD.classList.remove('bg-teal-500', 'text-slate-950');
+        btnD.classList.add('text-muted');
+      } else {
+        btnD.classList.add('bg-teal-500', 'text-slate-950');
+        btnD.classList.remove('text-muted');
+        btnW.classList.remove('bg-teal-500', 'text-slate-950');
+        btnW.classList.add('text-muted');
+      }
+      renderFinanceDashboard();
+    }
+
+    function saveFinanceCategory(e) {
+      e.preventDefault();
+      const profile = getCurrentProfile();
+      const editId = document.getElementById('finCatEditId').value;
+      const emoji = document.getElementById('finCatEmoji').value.trim() || '💳';
+      const name = document.getElementById('finCatName').value.trim();
+      const type = document.getElementById('finCatType').value;
+      const plan = Math.max(0, Number(document.getElementById('finCatPlan').value) || 0);
+      if (!name) return;
+
+      const palette = ['#EC4899', '#8B5CF6', '#38BDF8', '#F59E0B', '#14B8A6', '#F43F5E', '#10B981'];
+
+      if (editId) {
+        const cat = profile.finance.categories.find(c => c.id === editId);
+        if (cat) {
+          cat.emoji = emoji;
+          cat.name = name;
+          cat.type = type;
+          cat.plan = plan;
+        }
+        showToast('Категория обновлена');
+      } else {
+        profile.finance.categories.push({
+          id: 'cat_' + Date.now(),
+          emoji,
+          name,
+          type,
+          plan,
+          color: palette[profile.finance.categories.length % palette.length]
+        });
+        showToast('Категория добавлена');
+      }
+
+      document.getElementById('finCatEditId').value = '';
+      document.getElementById('finCatName').value = '';
+      document.getElementById('finCatPlan').value = '';
+      document.getElementById('finCatSubmitBtn').textContent = '+ Добавить';
+      saveState();
+      renderFinanceDashboard();
+    }
+
+    function editFinanceCategory(id) {
+      const profile = getCurrentProfile();
+      const cat = profile.finance.categories.find(c => c.id === id);
+      if (!cat) return;
+      document.getElementById('finCatEditId').value = cat.id;
+      document.getElementById('finCatEmoji').value = cat.emoji;
+      document.getElementById('finCatName').value = cat.name;
+      document.getElementById('finCatType').value = cat.type;
+      document.getElementById('finCatPlan').value = cat.plan;
+      document.getElementById('finCatSubmitBtn').textContent = 'Сохранить';
+    }
+
+    function deleteFinanceCategory(id) {
+      const profile = getCurrentProfile();
+      profile.finance.categories = profile.finance.categories.filter(c => c.id !== id);
+      profile.finance.transactions = profile.finance.transactions.filter(t => t.categoryId !== id);
+      saveState();
+      renderFinanceDashboard();
+      showToast('Категория и её операции удалены');
+    }
+
+    function addFinanceTransaction(e) {
+      e.preventDefault();
+      const profile = getCurrentProfile();
+      const date = document.getElementById('finTxDate').value;
+      const categoryId = document.getElementById('finTxCategory').value;
+      const note = document.getElementById('finTxNote').value.trim();
+      const amount = Math.max(0, Number(document.getElementById('finTxAmount').value) || 0);
+      if (!date || !categoryId || amount <= 0) return;
+
+      profile.finance.transactions.unshift({
+        id: 'tx_' + Date.now(),
+        date,
+        categoryId,
+        note: note || 'Операция',
+        amount
+      });
+      document.getElementById('finTxNote').value = '';
+      document.getElementById('finTxAmount').value = '';
+      saveState();
+      renderFinanceDashboard();
+      showToast('Операция записана');
+    }
+
+    function deleteFinanceTransaction(id) {
+      const profile = getCurrentProfile();
+      profile.finance.transactions = profile.finance.transactions.filter(t => t.id !== id);
+      saveState();
+      renderFinanceDashboard();
+      showToast('Операция удалена');
+    }
+
+    function openBudgetLimitEditor() {
+      const profile = getCurrentProfile();
+      const box = document.getElementById('finBudgetLimitEditor');
+      box.classList.toggle('hidden');
+      if (box.classList.contains('hidden')) return;
+
+      const categories = profile.finance.categories || [];
+      const transactions = profile.finance.transactions || [];
+      const factByCat = {};
+      categories.forEach(c => factByCat[c.id] = 0);
+      transactions.forEach(tx => {
+        if (factByCat[tx.categoryId] !== undefined) {
+          factByCat[tx.categoryId] += Number(tx.amount) || 0;
+        }
+      });
+
+      let planExpense = 0, factExpense = 0;
+      categories.forEach(c => {
+        if (c.type !== 'income') {
+          planExpense += Number(c.plan) || 0;
+          factExpense += factByCat[c.id] || 0;
+        }
+      });
+
+      const effectiveLimit = typeof profile.finance.budgetOverride === 'number'
+        ? profile.finance.budgetOverride
+        : planExpense;
+      const currentLeft = effectiveLimit - factExpense;
+
+      document.getElementById('finDesiredLeftInput').value = Math.round(currentLeft);
+      document.getElementById('finCustomTotalLimitInput').value = Math.round(effectiveLimit);
+    }
+
+    function applyDesiredBudgetLeft() {
+      const profile = getCurrentProfile();
+      const desiredLeft = Number(document.getElementById('finDesiredLeftInput').value);
+      if (Number.isNaN(desiredLeft)) return;
+
+      const categories = profile.finance.categories || [];
+      const transactions = profile.finance.transactions || [];
+      const factByCat = {};
+      categories.forEach(c => factByCat[c.id] = 0);
+      transactions.forEach(tx => {
+        if (factByCat[tx.categoryId] !== undefined) {
+          factByCat[tx.categoryId] += Number(tx.amount) || 0;
+        }
+      });
+
+      let factExpense = 0;
+      categories.forEach(c => {
+        if (c.type !== 'income') factExpense += factByCat[c.id] || 0;
+      });
+
+      profile.finance.budgetOverride = Math.max(0, factExpense + desiredLeft);
+      saveState();
+      document.getElementById('finBudgetLimitEditor').classList.add('hidden');
+      renderFinanceDashboard();
+      showToast('Остаток лимита расходов обновлён');
+    }
+
+    function applyCustomTotalBudgetLimit() {
+      const profile = getCurrentProfile();
+      const customLimit = Number(document.getElementById('finCustomTotalLimitInput').value);
+      if (Number.isNaN(customLimit) || customLimit < 0) return;
+
+      profile.finance.budgetOverride = customLimit;
+      saveState();
+      document.getElementById('finBudgetLimitEditor').classList.add('hidden');
+      renderFinanceDashboard();
+      showToast('Общий лимит расходов изменён');
+    }
+
+    function resetBudgetLimitOverride() {
+      const profile = getCurrentProfile();
+      profile.finance.budgetOverride = null;
+      saveState();
+      document.getElementById('finBudgetLimitEditor').classList.add('hidden');
+      renderFinanceDashboard();
+      showToast('Лимит сброшен к сумме планов категорий');
+    }
+
+    function renderFinanceDashboard() {
+      const profile = getCurrentProfile();
+      const categories = profile.finance.categories || [];
+      const transactions = profile.finance.transactions || [];
+
+      const catSelect = document.getElementById('finTxCategory');
+      if (categories.length > 0) {
+        catSelect.innerHTML = categories.map(c =>
+          `<option value="${c.id}">${escapeHtml(c.emoji)} ${escapeHtml(c.name)} (${c.type === 'income' ? '+' : '-'})</option>`
+        ).join('');
+      } else {
+        catSelect.innerHTML = `<option value="">Сначала создайте категорию</option>`;
+      }
+      if (!document.getElementById('finTxDate').value) {
+        document.getElementById('finTxDate').value = '2026-07-25';
+      }
+
+      const factByCat = {};
+      categories.forEach(c => factByCat[c.id] = 0);
+      transactions.forEach(tx => {
+        if (factByCat[tx.categoryId] !== undefined) {
+          factByCat[tx.categoryId] += Number(tx.amount) || 0;
+        }
+      });
+
+      let planIncome = 0, factIncome = 0, planExpense = 0, factExpense = 0;
+      categories.forEach(c => {
+        const fact = factByCat[c.id] || 0;
+        if (c.type === 'income') {
+          planIncome += Number(c.plan) || 0;
+          factIncome += fact;
+        } else {
+          planExpense += Number(c.plan) || 0;
+          factExpense += fact;
+        }
+      });
+
+      const balance = factIncome - factExpense;
+      const effectiveExpenseLimit = typeof profile.finance.budgetOverride === 'number'
+        ? profile.finance.budgetOverride
+        : planExpense;
+      const budgetLeft = effectiveExpenseLimit - factExpense;
+      const savingsRate = factIncome > 0 ? Math.round(((factIncome - factExpense) / factIncome) * 100) : 0;
+
+      document.getElementById('finBalanceVal').textContent = formatMoney(balance);
+      document.getElementById('finSavingsRate').textContent = `Норма сбережений: ${savingsRate}%`;
+      document.getElementById('finIncomeVal').textContent = formatMoney(factIncome);
+      document.getElementById('finIncomePlanSub').textContent = `План: ${formatMoney(planIncome)}`;
+      document.getElementById('finIncomePctBadge').textContent = `${planIncome > 0 ? Math.round((factIncome / planIncome) * 100) : 0}%`;
+
+      document.getElementById('finExpenseVal').textContent = formatMoney(factExpense);
+      document.getElementById('finExpensePlanSub').textContent = `План: ${formatMoney(planExpense)}`;
+      document.getElementById('finExpensePctBadge').textContent = `${planExpense > 0 ? Math.round((factExpense / planExpense) * 100) : 0}%`;
+
+      document.getElementById('finBudgetLeftVal').textContent = formatMoney(budgetLeft);
+      const overrideNote = typeof profile.finance.budgetOverride === 'number'
+        ? ` • Лимит: ${formatMoney(effectiveExpenseLimit)}`
+        : '';
+      document.getElementById('finBudgetStatus').textContent = (budgetLeft >= 0 ? 'В пределах плана' : '⚠️ Превышение плана!') + overrideNote;
+      document.getElementById('finBudgetStatus').className = `text-[11px] mt-1 font-semibold ${budgetLeft >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+      renderFinanceFlowChart(categories, transactions);
+      renderExpensePieChart(categories, factByCat, factExpense);
+
+      document.getElementById('financeCategoriesTableBody').innerHTML = categories.map(c => {
+        const fact = factByCat[c.id] || 0;
+        const plan = Number(c.plan) || 0;
+        const pct = plan > 0 ? Math.round((fact / plan) * 100) : 0;
+        const barW = Math.min(100, pct);
+        const isOver = c.type === 'expense' && fact > plan;
+        return `
+          <tr class="hover:bg-slate-700/20 transition">
+            <td class="py-2.5 px-3 font-semibold text-main">
+              <span class="mr-1.5">${escapeHtml(c.emoji)}</span>${escapeHtml(c.name)}
+            </td>
+            <td class="py-2.5 px-2">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${c.type === 'income' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'}">
+                ${c.type === 'income' ? 'Доход' : 'Расход'}
+              </span>
+            </td>
+            <td class="py-2.5 px-2 text-right text-muted font-medium">${formatMoney(plan)}</td>
+            <td class="py-2.5 px-2 text-right font-bold ${isOver ? 'text-rose-400' : 'text-main'}">${formatMoney(fact)}</td>
+            <td class="py-2.5 px-3">
+              <div class="flex items-center gap-1.5">
+                <div class="flex-1 h-1.5 bg-slate-700/40 rounded-full overflow-hidden">
+                  <div class="h-full rounded-full ${isOver ? 'bg-rose-500' : (c.type === 'income' ? 'bg-emerald-400' : 'bg-sky-400')}" style="width:${barW}%"></div>
+                </div>
+                <span class="text-[10px] font-bold w-8 text-right text-muted">${pct}%</span>
+              </div>
+            </td>
+            <td class="py-2.5 px-2 text-center whitespace-nowrap">
+              <button onclick="editFinanceCategory('${c.id}')" aria-label="Изменить категорию" class="min-w-[34px] min-h-[34px] inline-flex items-center justify-center text-sky-400 hover:bg-sky-500/15 rounded-lg cursor-pointer" title="Изменить">✏️</button>
+              <button onclick="deleteFinanceCategory('${c.id}')" aria-label="Удалить категорию" class="min-w-[34px] min-h-[34px] inline-flex items-center justify-center text-rose-400 hover:bg-rose-500/15 rounded-lg cursor-pointer" title="Удалить">🗑</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      const catMap = {};
+      categories.forEach(c => catMap[c.id] = c);
+      document.getElementById('financeTransactionsList').innerHTML = transactions.length === 0
+        ? `<div class="text-xs text-muted text-center py-6">Пока нет записанных операций</div>`
+        : transactions.map(tx => {
+            const cat = catMap[tx.categoryId] || { emoji: '💳', name: 'Категория', type: 'expense' };
+            const isInc = cat.type === 'income';
+            return `
+              <div class="app-subcard rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <span class="w-8 h-8 rounded-lg app-card flex items-center justify-center text-sm shrink-0">${escapeHtml(cat.emoji)}</span>
+                  <div class="min-w-0">
+                    <div class="text-xs font-bold text-main truncate">${escapeHtml(tx.note)}</div>
+                    <div class="text-[10px] text-muted truncate">${escapeHtml(cat.name)} • ${tx.date}</div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-xs font-extrabold ${isInc ? 'text-emerald-400' : 'text-rose-400'}">
+                    ${isInc ? '+' : '-'}${formatMoney(tx.amount)}
+                  </span>
+                  <button onclick="deleteFinanceTransaction('${tx.id}')" aria-label="Удалить операцию" class="text-muted hover:text-rose-400 text-xs min-w-[32px] min-h-[32px] flex items-center justify-center rounded-lg cursor-pointer">✕</button>
+                </div>
+              </div>
+            `;
+          }).join('');
+    }
+
+    function renderFinanceFlowChart(categories, transactions) {
+      const svg = document.getElementById('financeFlowSvg');
+      const catTypeMap = {};
+      categories.forEach(c => catTypeMap[c.id] = c.type);
+
+      let buckets = [];
+      if (appState.financeChartMode === 'weekly') {
+        buckets = [
+          { label: '1 нед.', inc: 0, exp: 0 },
+          { label: '2 нед.', inc: 0, exp: 0 },
+          { label: '3 нед.', inc: 0, exp: 0 },
+          { label: '4 нед.', inc: 0, exp: 0 },
+          { label: '5 нед.', inc: 0, exp: 0 }
+        ];
+        transactions.forEach(tx => {
+          const day = parseInt((tx.date || '2026-07-01').split('-')[2], 10) || 1;
+          const wIdx = getWeekIndexForDay(day);
+          if (catTypeMap[tx.categoryId] === 'income') buckets[wIdx].inc += Number(tx.amount) || 0;
+          else buckets[wIdx].exp += Number(tx.amount) || 0;
+        });
+      } else {
+        for (let d = 1; d <= 31; d += 2) {
+          buckets.push({ label: `${d}-${Math.min(31, d + 1)}`, dStart: d, dEnd: d + 1, inc: 0, exp: 0 });
+        }
+        transactions.forEach(tx => {
+          const day = parseInt((tx.date || '2026-07-01').split('-')[2], 10) || 1;
+          const b = buckets.find(x => day >= x.dStart && day <= x.dEnd);
+          if (b) {
+            if (catTypeMap[tx.categoryId] === 'income') b.inc += Number(tx.amount) || 0;
+            else b.exp += Number(tx.amount) || 0;
+          }
+        });
+      }
+
+      const W = 800, H = 220, padL = 55, padR = 16, padT = 16, padB = 28;
+      const plotW = W - padL - padR, plotH = H - padT - padB;
+      const maxVal = Math.max(1000, ...buckets.map(b => Math.max(b.inc, b.exp)));
+
+      let grid = '';
+      [0, 0.5, 1].forEach(ratio => {
+        const y = padT + plotH - ratio * plotH;
+        const valK = Math.round((maxVal * ratio) / 1000);
+        grid += `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}" stroke="rgba(148,163,184,0.18)" stroke-dasharray="3 3" />
+                 <text x="${padL - 8}" y="${y + 3}" text-anchor="end" fill="#64748B" font-size="10">${valK}k</text>`;
+      });
+
+      const groupW = plotW / buckets.length;
+      const barW = Math.min(24, groupW * 0.32);
+
+      const bars = buckets.map((b, i) => {
+        const cx = padL + i * groupW + groupW / 2;
+        const hInc = (b.inc / maxVal) * plotH;
+        const hExp = (b.exp / maxVal) * plotH;
+        return `
+          <rect x="${cx - barW - 2}" y="${padT + plotH - hInc}" width="${barW}" height="${Math.max(2, hInc)}" rx="4" fill="#10B981" opacity="0.9">
+            <title>${b.label} • Доход: ${formatMoney(b.inc)}</title>
+          </rect>
+          <rect x="${cx + 2}" y="${padT + plotH - hExp}" width="${barW}" height="${Math.max(2, hExp)}" rx="4" fill="#F43F5E" opacity="0.9">
+            <title>${b.label} • Расход: ${formatMoney(b.exp)}</title>
+          </rect>
+          <text x="${cx}" y="${H - 8}" text-anchor="middle" fill="#64748B" font-size="10">${b.label}</text>
+        `;
+      }).join('');
+
+      svg.innerHTML = grid + bars;
+    }
+
+    function renderExpensePieChart(categories, factByCat, totalExpense) {
+      const svg = document.getElementById('expensePieSvg');
+      const legend = document.getElementById('expensePieLegend');
+      document.getElementById('pieTotalExpenseText').textContent = totalExpense.toLocaleString('ru-RU');
+
+      const expCats = categories
+        .filter(c => c.type === 'expense')
+        .map(c => ({ ...c, val: factByCat[c.id] || 0 }))
+        .filter(c => c.val > 0)
+        .sort((a, b) => b.val - a.val);
+
+      if (expCats.length === 0 || totalExpense <= 0) {
+        svg.innerHTML = `<circle cx="60" cy="60" r="44" fill="none" stroke="rgba(148,163,184,0.2)" stroke-width="18" />`;
+        legend.innerHTML = `<div class="text-xs text-muted text-center">Нет расходов за период</div>`;
+        return;
+      }
+
+      const r = 44;
+      const circ = 2 * Math.PI * r;
+      let offset = 0;
+
+      svg.innerHTML = expCats.map(c => {
+        const pct = c.val / totalExpense;
+        const dash = pct * circ;
+        const seg = `<circle cx="60" cy="60" r="${r}" fill="none" stroke="${c.color}" stroke-width="18"
+          stroke-dasharray="${dash.toFixed(2)} ${circ.toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" />`;
+        offset += dash;
+        return seg;
+      }).join('');
+
+      legend.innerHTML = expCats.map(c => {
+        const pct = Math.round((c.val / totalExpense) * 100);
+        return `
+          <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${c.color}"></span>
+              <span class="truncate text-main font-medium">${escapeHtml(c.emoji)} ${escapeHtml(c.name)}</span>
+            </div>
+            <span class="font-bold text-muted ml-2 shrink-0">${pct}% (${c.val.toLocaleString('ru-RU')})</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== МОДУЛЬ 3: РАСПИСАНИЕ УРОКОВ / ПАР ====================
+    function openAddLessonModal(dayIdx) {
+      document.getElementById('lessonModalTitle').textContent = `Добавить пару • ${SCHEDULE_DAYS[dayIdx]}`;
+      document.getElementById('lessonDayInput').value = dayIdx;
+      document.getElementById('lessonIdInput').value = '';
+      document.getElementById('lessonStartInput').value = '08:00';
+      document.getElementById('lessonEndInput').value = '09:20';
+      document.getElementById('lessonSubjectInput').value = '';
+      document.getElementById('lessonTypeInput').value = 'Лекция';
+      document.getElementById('lessonRoomInput').value = '';
+      document.getElementById('lessonTeacherInput').value = '';
+      openModal('lessonModal');
+    }
+
+    function openEditLessonModal(dayIdx, lessonId) {
+      const profile = getCurrentProfile();
+      const lesson = (profile.schedule[dayIdx] || []).find(l => l.id === lessonId);
+      if (!lesson) return;
+      document.getElementById('lessonModalTitle').textContent = `Редактировать пару • ${SCHEDULE_DAYS[dayIdx]}`;
+      document.getElementById('lessonDayInput').value = dayIdx;
+      document.getElementById('lessonIdInput').value = lesson.id;
+      document.getElementById('lessonStartInput').value = lesson.start;
+      document.getElementById('lessonEndInput').value = lesson.end;
+      document.getElementById('lessonSubjectInput').value = lesson.subject;
+      document.getElementById('lessonTypeInput').value = lesson.type || 'Лекция';
+      document.getElementById('lessonRoomInput').value = lesson.room || '';
+      document.getElementById('lessonTeacherInput').value = lesson.teacher || '';
+      openModal('lessonModal');
+    }
+
+    function saveLessonForm(e) {
+      e.preventDefault();
+      const profile = getCurrentProfile();
+      const dayIdx = Number(document.getElementById('lessonDayInput').value);
+      const lessonId = document.getElementById('lessonIdInput').value;
+      const start = document.getElementById('lessonStartInput').value;
+      const end = document.getElementById('lessonEndInput').value;
+      const subject = document.getElementById('lessonSubjectInput').value.trim();
+      const type = document.getElementById('lessonTypeInput').value;
+      const room = document.getElementById('lessonRoomInput').value.trim();
+      const teacher = document.getElementById('lessonTeacherInput').value.trim();
+
+      if (!profile.schedule[dayIdx]) profile.schedule[dayIdx] = [];
+
+      if (lessonId) {
+        const idx = profile.schedule[dayIdx].findIndex(l => l.id === lessonId);
+        if (idx !== -1) {
+          profile.schedule[dayIdx][idx] = { id: lessonId, start, end, subject, type, room, teacher };
+        }
+        showToast('Пара обновлена');
+      } else {
+        profile.schedule[dayIdx].push({ id: 'les_' + Date.now(), start, end, subject, type, room, teacher });
+        showToast('Пара добавлена в расписание');
+      }
+
+      profile.schedule[dayIdx].sort((a, b) => a.start.localeCompare(b.start));
+      saveState();
+      closeModal('lessonModal');
+      renderSchedule();
+    }
+
+    function deleteLesson(dayIdx, lessonId) {
+      const profile = getCurrentProfile();
+      profile.schedule[dayIdx] = (profile.schedule[dayIdx] || []).filter(l => l.id !== lessonId);
+      saveState();
+      renderSchedule();
+      showToast('Пара удалена');
+    }
+
+    function renderSchedule() {
+      const profile = getCurrentProfile();
+      const grid = document.getElementById('scheduleGrid');
+
+      const typeBadgeColors = {
+        'Лекция': 'bg-sky-500/15 text-sky-400 border-sky-500/30',
+        'Практика': 'bg-teal-500/15 text-teal-400 border-teal-500/30',
+        'Лабораторная': 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+        'Семинар': 'bg-amber-500/15 text-amber-400 border-amber-500/30'
+      };
+
+      grid.innerHTML = SCHEDULE_DAYS.map((dayName, dayIdx) => {
+        const lessons = profile.schedule[dayIdx] || [];
+        return `
+          <div class="app-card rounded-2xl p-4 flex flex-col justify-between min-w-0">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-700/30 pb-2.5 mb-3">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-teal-400"></span>
+                  <h3 class="text-sm font-extrabold text-main">${dayName}</h3>
+                </div>
+                <button onclick="openAddLessonModal(${dayIdx})" class="min-h-[36px] text-[11px] font-bold px-3 py-1 rounded-lg bg-teal-500/15 text-teal-400 hover:bg-teal-500 hover:text-slate-950 transition cursor-pointer">
+                  + Пара
+                </button>
+              </div>
+
+              <div class="space-y-2.5">
+                ${lessons.length === 0
+                  ? `<div class="text-xs text-muted text-center py-6 app-subcard rounded-xl">Нет пар в этот день</div>`
+                  : lessons.map((l, idx) => {
+                      const badgeCls = typeBadgeColors[l.type] || typeBadgeColors['Лекция'];
+                      return `
+                        <div class="app-subcard rounded-xl p-3 hover:border-teal-500/40 transition group">
+                          <div class="flex items-center justify-between gap-2 mb-1.5">
+                            <span class="text-xs font-extrabold text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded-md">
+                              ${idx + 1} пара • ${escapeHtml(l.start)} – ${escapeHtml(l.end)}
+                            </span>
+                            <div class="flex items-center gap-1 shrink-0">
+                              <button onclick="openEditLessonModal(${dayIdx}, '${l.id}')" aria-label="Изменить пару" class="min-w-[34px] min-h-[34px] flex items-center justify-center text-xs text-sky-400 hover:bg-sky-500/15 rounded-lg cursor-pointer" title="Изменить время и пару">✏️</button>
+                              <button onclick="deleteLesson(${dayIdx}, '${l.id}')" aria-label="Удалить пару" class="min-w-[34px] min-h-[34px] flex items-center justify-center text-xs text-rose-400 hover:bg-rose-500/15 rounded-lg cursor-pointer" title="Удалить пару">🗑</button>
+                            </div>
+                          </div>
+                          <div class="text-xs sm:text-sm font-bold text-main mb-1">${escapeHtml(l.subject)}</div>
+                          <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-muted">
+                            <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${badgeCls}">${escapeHtml(l.type)}</span>
+                            <span>${l.room ? `📍 ${escapeHtml(l.room)}` : ''} ${l.teacher ? `• ${escapeHtml(l.teacher)}` : ''}</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join('')
+                }
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== МОДУЛЬ 4: ЛИЧНЫЙ ТРЕКЕР ЗАДАЧ ====================
+    function setTaskFilter(filter) {
+      appState.taskFilter = filter;
+      ['all', 'active', 'high', 'done'].forEach(f => {
+        const btn = document.getElementById(`tfilter-${f}`);
+        if (f === filter) {
+          btn.classList.add('bg-teal-500', 'text-slate-950');
+          btn.classList.remove('text-muted');
+        } else {
+          btn.classList.remove('bg-teal-500', 'text-slate-950');
+          btn.classList.add('text-muted');
+        }
+      });
+      renderTasks();
+    }
+
+    function addPersonalTask(e) {
+      e.preventDefault();
+      const profile = getCurrentProfile();
+      const title = document.getElementById('taskTitleInput').value.trim();
+      const priority = document.getElementById('taskPriorityInput').value;
+      const tag = document.getElementById('taskTagInput').value.trim() || 'Личное';
+      const dueDate = document.getElementById('taskDateInput').value || 'Без срока';
+      if (!title) return;
+
+      profile.tasks.unshift({
+        id: 'tsk_' + Date.now(),
+        title,
+        priority,
+        tag,
+        dueDate,
+        done: false
+      });
+      document.getElementById('taskTitleInput').value = '';
+      document.getElementById('taskTagInput').value = '';
+      saveState();
+      renderTasks();
+      showToast('Задача добавлена в ваш трекер');
+    }
+
+    function toggleTaskDone(id) {
+      const profile = getCurrentProfile();
+      const t = profile.tasks.find(x => x.id === id);
+      if (t) {
+        t.done = !t.done;
+        saveState();
+        renderTasks();
+      }
+    }
+
+    function deletePersonalTask(id) {
+      const profile = getCurrentProfile();
+      profile.tasks = profile.tasks.filter(x => x.id !== id);
+      saveState();
+      renderTasks();
+      showToast('Задача удалена');
+    }
+
+    function renderTasks() {
+      const profile = getCurrentProfile();
+      const tasks = profile.tasks || [];
+      const doneCount = tasks.filter(t => t.done).length;
+      const pct = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
+
+      document.getElementById('tasksProgressText').textContent = `Выполнено: ${doneCount} из ${tasks.length} (${pct}%)`;
+      document.getElementById('tasksProgressBar').style.width = `${pct}%`;
+
+      const filtered = tasks.filter(t => {
+        if (appState.taskFilter === 'active') return !t.done;
+        if (appState.taskFilter === 'high') return t.priority === 'high' && !t.done;
+        if (appState.taskFilter === 'done') return t.done;
+        return true;
+      });
+
+      const prioBadge = {
+        high: { text: 'Высокий', cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30' },
+        medium: { text: 'Средний', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+        low: { text: 'Низкий', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' }
+      };
+
+      const container = document.getElementById('tasksListContainer');
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full app-card rounded-xl p-8 text-center text-xs text-muted">В этом фильтре задач пока нет</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(t => {
+        const p = prioBadge[t.priority] || prioBadge.medium;
+        return `
+          <div class="app-card rounded-xl p-4 flex items-start justify-between gap-3 min-w-0 ${t.done ? 'opacity-65' : ''}">
+            <div class="flex items-start gap-3 min-w-0">
+              <button onclick="toggleTaskDone('${t.id}')" aria-label="Отметить задачу выполненной" class="mt-0.5 min-w-[28px] min-h-[28px] rounded-lg border flex items-center justify-center shrink-0 cursor-pointer ${
+                t.done ? 'bg-teal-500 border-teal-500 text-slate-950 font-bold' : 'border-slate-500 hover:border-teal-400'
+              }">
+                ${t.done ? '✓' : ''}
+              </button>
+              <div class="min-w-0">
+                <div class="text-xs sm:text-sm font-bold text-main ${t.done ? 'line-through text-muted' : ''}">${escapeHtml(t.title)}</div>
+                <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                  <span class="px-2 py-0.5 rounded border text-[10px] font-bold ${p.cls}">${p.text}</span>
+                  <span class="px-2 py-0.5 rounded app-subcard text-[10px] font-semibold text-teal-400">#${escapeHtml(t.tag)}</span>
+                  <span class="text-[10px] text-muted">📅 ${escapeHtml(t.dueDate)}</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="deletePersonalTask('${t.id}')" aria-label="Удалить задачу" class="text-muted hover:text-rose-400 text-xs min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg cursor-pointer shrink-0">🗑</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ==================== НАСТРОЙКИ И ЭКСПОРТ ====================
+    function renderSettings() {
+      const profile = getCurrentProfile();
+      const list = document.getElementById('settingsHabitsList');
+      list.innerHTML = profile.habits.map(h => `
+        <div class="flex items-center justify-between gap-2 app-subcard rounded-xl px-3 py-2.5">
+          <div class="flex items-center gap-2 min-w-0">
+            <span>${escapeHtml(h.emoji)}</span>
+            <span class="text-xs font-semibold text-main truncate">${escapeHtml(h.name)}</span>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <input type="number" min="1" max="31" value="${h.goal}" aria-label="Цель в днях для привычки ${escapeHtml(h.name)}"
+              onchange="updateHabitGoal('${h.id}', this.value)"
+              class="w-16 app-input rounded-lg px-2 py-1.5 text-center" />
+            <button onclick="deleteHabit('${h.id}')" aria-label="Удалить привычку" class="text-rose-400 min-w-[34px] min-h-[34px] flex items-center justify-center rounded-lg text-xs cursor-pointer">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateHabitGoal(id, val) {
+      const profile = getCurrentProfile();
+      const h = profile.habits.find(x => x.id === id);
+      if (h) {
+        h.goal = Math.min(31, Math.max(1, parseInt(val, 10) || 31));
+        saveState();
+        showToast('Цель обновлена');
+      }
+    }
+
+    function resetDemoData() {
+      const profile = getCurrentProfile();
+      const fresh = createFullDemoProfile(profile.id, profile.name, profile.role, profile.color);
+      appState.profiles[profile.id] = fresh;
+      saveState();
+      renderAll();
+      showToast('Демо-данные восстановлены');
+    }
+
+    function exportProfileJSON() {
+      const profile = getCurrentProfile();
+      const blob = new Blob([JSON.stringify(profile, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `lichniy_shtab_${profile.name}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Резервная копия JSON скачана');
+    }
+
+    function importProfileJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!imported || !imported.name) {
+            showToast('Неверный формат файла');
+            return;
+          }
+          const profile = getCurrentProfile();
+          appState.profiles[profile.id] = { ...profile, ...imported, id: profile.id };
+          saveState();
+          renderAll();
+          showToast('Кабинет успешно восстановлен из JSON');
+        } catch (err) {
+          showToast('Ошибка чтения файла');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function renderAll() {
+      applyTheme();
+      renderHeaderProfile();
+      updateInstallButtonVisibility();
+      switchTab(appState.activeTab || 'habits');
+    }
+
+    let deferredInstallPrompt = null;
+
+    function isAppAlreadyInstalled() {
+      const standaloneDisplay = window.matchMedia('(display-mode: standalone)').matches ||
+        window.matchMedia('(display-mode: fullscreen)').matches ||
+        window.navigator.standalone === true;
+      return Boolean(appState.appInstalled || standaloneDisplay);
+    }
+
+    function initPwaManifest() {
+      try {
+        const base = new URL('./', window.location.href).href;
+        const icon = (name) => new URL(name, base).href;
+        const manifest = {
+          name: 'Личный штаб • LifeStats',
+          short_name: 'Личный штаб',
+          description: 'Привычки, финансы, расписание пар и личный трекер задач',
+          start_url: base,
+          scope: base,
+          display: 'standalone',
+          orientation: 'any',
+          background_color: '#070B14',
+          theme_color: '#070B14',
+          lang: 'ru',
+          icons: [
+            { src: icon('icon-192.png'), sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: icon('icon-512.png'), sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: icon('icon-512-maskable.png'), sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          ]
+        };
+        const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+        const link = document.getElementById('pwaManifestLink');
+        if (link) link.href = URL.createObjectURL(blob);
+      } catch (e) {
+        console.warn('Не удалось инициализировать manifest:', e);
+      }
+    }
+
+    function updateInstallButtonVisibility() {
+      const btn = document.getElementById('installAppBtn');
+      if (!btn) return;
+      if (isAppAlreadyInstalled()) {
+        btn.classList.add('hidden');
+        btn.style.display = 'none';
+      } else {
+        btn.classList.remove('hidden');
+        btn.style.display = '';
+      }
+    }
+
+    async function handleInstallClick() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const choice = await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        if (choice && choice.outcome === 'accepted') {
+          appState.appInstalled = true;
+          saveState();
+          updateInstallButtonVisibility();
+          showToast('Приложение устанавливается...');
+        } else {
+          showToast('Установку можно запустить в любое время');
+        }
+        return;
+      }
+
+      const isIos = /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+      const isAndroid = /android/i.test(window.navigator.userAgent);
+      if (isIos) {
+        showToast('В Safari нажмите «Поделиться» → «На экран „Домой“»');
+      } else if (isAndroid) {
+        showToast('В Chrome: меню ⋮ → «Установить приложение» или «Добавить на главный экран»');
+      } else {
+        showToast('Откройте меню браузера (⋮) и выберите «Установить приложение»');
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      updateInstallButtonVisibility();
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredInstallPrompt = null;
+      appState.appInstalled = true;
+      saveState();
+      updateInstallButtonVisibility();
+      showToast('«Личный штаб» установлен!');
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      initPwaManifest();
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        appState.appInstalled = true;
+        saveState();
+      }
+      renderAll();
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            reg.update().catch(() => {});
+            console.log('Service Worker зарегистрирован:', reg.scope);
+          })
+          .catch((err) => console.warn('SW error:', err));
+      }
+    });
+  </script>
+</body>
+</html>
